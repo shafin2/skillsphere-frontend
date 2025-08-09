@@ -30,7 +30,7 @@ export default function OAuthSuccess() {
         localStorage.setItem('accessToken', token)
         
         // Get user profile
-        const { data } = await http.get('/auth/me')
+        const { data } = await http.get('/profile/me')
         setUser(data.user)
         
         // Redirect based on user status
@@ -42,6 +42,7 @@ export default function OAuthSuccess() {
           navigate('/verify-email-required')
           return
         }
+        // Profile completion will be handled by the modal in App.jsx
         navigate('/dashboard')
       } catch (error) {
         setStatus('error')

@@ -23,6 +23,9 @@ export default function Dashboard() {
             <span className="text-sm text-muted">
               Welcome, {user?.name}
             </span>
+            <a href="/profile" className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-border hover:bg-background transition-colors text-sm">
+              Edit Profile
+            </a>
             <button
               onClick={toggleTheme}
               className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-border hover:bg-background transition-colors text-sm"
@@ -71,7 +74,10 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted mb-4">Find mentors and book sessions</p>
-                <Button className="w-full">Browse Mentors</Button>
+                <div className="space-y-2">
+                  <a href="/mentors" className="inline-flex w-full items-center justify-center px-4 py-2 rounded-md bg-primary text-white hover:opacity-90">Browse Mentors</a>
+                  <a href="/bookings" className="inline-flex w-full items-center justify-center px-4 py-2 rounded-md border border-border hover:bg-background">My Bookings</a>
+                </div>
               </CardContent>
             </Card>
           )}
@@ -83,7 +89,7 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted mb-4">Manage your sessions and availability</p>
-                <Button className="w-full">Manage Sessions</Button>
+                <a href="/mentor-bookings" className="inline-flex w-full items-center justify-center px-4 py-2 rounded-md bg-primary text-white hover:opacity-90">Booking Requests</a>
               </CardContent>
             </Card>
           )}

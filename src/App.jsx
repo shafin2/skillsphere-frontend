@@ -1,7 +1,8 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { ThemeProvider } from './context/ThemeProvider.jsx'
-import { AuthProvider } from './context/AuthContext.jsx'
+import { AuthProvider, useAuth } from './context/AuthContext.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
+import ProfileCompletionModal from './components/ProfileCompletionModal.jsx'
 
 // Auth pages
 import RoleSelection from './pages/auth/RoleSelection.jsx'
@@ -17,13 +18,27 @@ import Landing from './pages/Landing.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import PendingApproval from './pages/PendingApproval.jsx'
 import VerifyEmailRequired from './pages/VerifyEmailRequired.jsx'
+import Profile from './pages/Profile.jsx'
+import MentorSearch from './pages/MentorSearch.jsx'
+import MentorProfile from './pages/MentorProfile.jsx'
+import MyBookings from './pages/MyBookings.jsx'
+import MentorBookings from './pages/MentorBookings.jsx'
 
-function App() {
+function AppContent() {
+  const { user, showProfileModal, updateUserProfile } = useAuth()
+
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <Router>
-          <Routes>
+    <Router>
+      {/* Profile completion modal */}
+      {showProfileModal && user && (
+        <ProfileCompletionModal
+          user={user}
+          onComplete={updateUserProfile}
+          onClose={() => {}} // Modal cannot be closed until profile is complete
+        />
+      )}
+      
+      <Routes>
             {/* Landing page */}
             <Route path="/" element={<Landing />} />
             
@@ -66,11 +81,40 @@ function App() {
                 <Dashboard />
               </ProtectedRoute>
             } />
+
+            <Route path="/mentors" element={<MentorSearch />} />
+            <Route path="/mentors/:id" element={<MentorProfile />} />
+
+            <Route path="/profile" element={
+              <ProtectedRoute requireAuth={true}>
+                <Profile />
+              </ProtectedRoute>
+            } />
+
+            <Route path="/bookings" element={
+              <ProtectedRoute requireAuth={true}>
+                <MyBookings />
+              </ProtectedRoute>
+            } />
+
+            <Route path="/mentor-bookings" element={
+              <ProtectedRoute requireAuth={true}>
+                <MentorBookings />
+              </ProtectedRoute>
+            } />
             
             {/* Catch all - redirect to landing */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Router>
+    )
+}
+
+function App() {
+  return (
+    <ThemeProvider>
+      <AuthProvider>
+        <AppContent />
       </AuthProvider>
     </ThemeProvider>
   )

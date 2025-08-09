@@ -6,12 +6,16 @@ const AuthContext = createContext({
   setUser: () => {},
   login: () => {},
   logout: () => {},
-  loading: true
+  loading: true,
+  showProfileModal: false,
+  setShowProfileModal: () => {},
+  updateUserProfile: () => {}
 })
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [showProfileModal, setShowProfileModal] = useState(false)
 
   // Check if user is authenticated on app load
   useEffect(() => {
@@ -19,10 +23,24 @@ export function AuthProvider({ children }) {
       const token = localStorage.getItem('accessToken')
       if (token) {
         try {
-          const { data } = await http.get('/auth/me')
+          const { data } = await http.get('/profile/me')
           setUser(data.user)
+          
+          // Check if profile is incomplete and user is authenticated
+          if (data.user && !data.user.isProfileComplete) {
+            setShowProfileModal(true)
+          }
         } catch (error) {
-          localStorage.removeItem('accessToken')
+          // Fallback to auth/me if profile endpoint fails
+          try {
+            const { data: authData } = await http.get('/auth/me')
+            setUser(authData.user)
+            if (authData.user && !authData.user.isProfileComplete) {
+              setShowProfileModal(true)
+            }
+          } catch (authError) {
+            localStorage.removeItem('accessToken')
+          }
         }
       }
       setLoading(false)
@@ -33,8 +51,25 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     const { data } = await http.post('/auth/login', { email, password })
     localStorage.setItem('accessToken', data.accessToken)
-    const { data: userData } = await http.get('/auth/me')
-    setUser(userData.user)
+    
+    // Get full user profile after login
+    try {
+      const { data: profileData } = await http.get('/profile/me')
+      setUser(profileData.user)
+      
+      // Check if profile is incomplete
+      if (profileData.user && !profileData.user.isProfileComplete) {
+        setShowProfileModal(true)
+      }
+    } catch (error) {
+      // Fallback to auth/me
+      const { data: userData } = await http.get('/auth/me')
+      setUser(userData.user)
+      if (userData.user && !userData.user.isProfileComplete) {
+        setShowProfileModal(true)
+      }
+    }
+    
     return data
   }
 
@@ -46,6 +81,12 @@ export function AuthProvider({ children }) {
     }
     localStorage.removeItem('accessToken')
     setUser(null)
+    setShowProfileModal(false)
+  }
+
+  const updateUserProfile = (updatedUser) => {
+    setUser(updatedUser)
+    setShowProfileModal(false)
   }
 
   const value = {
@@ -53,7 +94,10 @@ export function AuthProvider({ children }) {
     setUser,
     login,
     logout,
-    loading
+    loading,
+    showProfileModal,
+    setShowProfileModal,
+    updateUserProfile
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

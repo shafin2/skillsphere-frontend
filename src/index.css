@@ -23,7 +23,7 @@
   .dark {
     /* Dark theme */
     --color-bg: 17 24 39;            /* #111827 */
-    --color-surface: 24 33 54;       /* ~#182136 */
+    --color-surface: 31 41 55;       /* #1F2937 for better contrast in inputs */
     --color-text: 243 244 246;       /* #F3F4F6 */
     --color-muted: 156 163 175;      /* #9CA3AF */
     --color-border: 55 65 81;        /* #374151 */
@@ -40,3 +40,9 @@
   html { scroll-behavior: smooth; }
   body { @apply min-h-screen bg-background text-foreground; }
 }
+
+/* Scrollbar styling for modal content */
+.custom-scroll::-webkit-scrollbar { width: 10px; }
+.custom-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 8px; }
+.custom-scroll::-webkit-scrollbar-thumb { background: rgba(100,116,139,0.6); border-radius: 8px; }
+.custom-scroll::-webkit-scrollbar-thumb:hover { background: rgba(100,116,139,0.8); }
