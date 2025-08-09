@@ -1,43 +1,47 @@
 /** @type {import('tailwindcss').Config} */
-import typography from '@tailwindcss/typography'
+const withOpacity = (variable) => ({ opacityValue }) => {
+  if (opacityValue !== undefined) {
+    return `rgb(var(${variable}) / ${opacityValue})`
+  }
+  return `rgb(var(${variable}))`
+}
 
 export default {
   darkMode: 'class',
   content: [
     './index.html',
-    './src/**/*.{js,jsx,ts,tsx}',
+    './src/**/*.{js,jsx,ts,tsx}'
   ],
   theme: {
     extend: {
       colors: {
-        primary: '#1D4ED8',
-        secondary: '#9333EA',
-        accent: '#F59E0B',
+        // Semantic tokens
+        background: withOpacity('--color-bg'),
+        surface: withOpacity('--color-surface'),
+        foreground: withOpacity('--color-text'),
+        muted: withOpacity('--color-muted'),
+        border: withOpacity('--color-border'),
+        primary: withOpacity('--color-primary'),
+        secondary: withOpacity('--color-secondary'),
+        accent: withOpacity('--color-accent'),
+        success: withOpacity('--color-success'),
+        warning: withOpacity('--color-warning'),
+        destructive: withOpacity('--color-destructive'),
+        ring: withOpacity('--color-ring'),
+
+        // Back-compat names (optional)
         darkBg: '#111827',
-        lightBg: '#F9FAFB',
+        lightBg: '#F9FAFB'
       },
       spacing: {
-        '4.5': '1.125rem',
-        '18': '4.5rem',
+        18: '4.5rem',
+        128: '32rem'
       },
-      typography: {
-        DEFAULT: {
-          css: {
-            a: {
-              color: '#1D4ED8',
-              '&:hover': { color: '#9333EA' },
-            },
-            h1: { scrollMarginTop: '1.25rem' },
-          },
-        },
-        dark: {
-          css: {
-            color: '#e5e7eb',
-            a: { color: '#93c5fd' },
-          },
-        },
-      },
-    },
+      fontSize: {
+        '2xs': '0.7rem'
+      }
+    }
   },
-  plugins: [typography],
+  plugins: []
 }
+
