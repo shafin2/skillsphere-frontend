@@ -23,6 +23,7 @@ import MentorSearch from './pages/MentorSearch.jsx'
 import MentorProfile from './pages/MentorProfile.jsx'
 import MyBookings from './pages/MyBookings.jsx'
 import MentorBookings from './pages/MentorBookings.jsx'
+import ChatPage from './pages/Chat.jsx'
 
 function AppContent() {
   const { user, showProfileModal, updateUserProfile } = useAuth()
@@ -100,6 +101,12 @@ function AppContent() {
             <Route path="/mentor-bookings" element={
               <ProtectedRoute requireAuth={true}>
                 <MentorBookings />
+              </ProtectedRoute>
+            } />
+
+            <Route path="/chat/:channelId" element={
+              <ProtectedRoute requireAuth={true}>
+                <ChatPage />
               </ProtectedRoute>
             } />
             

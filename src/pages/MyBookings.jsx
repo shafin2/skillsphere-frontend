@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import http from '../lib/http.js'
 import Button from '../components/ui/Button.jsx'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card.jsx'
@@ -8,8 +9,10 @@ import { useTheme } from '../context/ThemeProvider.jsx'
 export default function MyBookings() {
   const { user, logout } = useAuth()
   const { isDark, toggleTheme } = useTheme()
+  const navigate = useNavigate()
   const [bookings, setBookings] = useState([])
   const [loading, setLoading] = useState(true)
+  const [chatLoading, setChatLoading] = useState({})
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -33,6 +36,19 @@ export default function MyBookings() {
       ))
     } catch (error) {
       alert('Failed to cancel booking')
+    }
+  }
+
+  const handleOpenChat = async (bookingId) => {
+    setChatLoading(prev => ({ ...prev, [bookingId]: true }))
+    
+    try {
+      const { data } = await http.post('/chat/create-channel', { bookingId })
+      navigate(`/chat/${data.channelId}`)
+    } catch (error) {
+      alert(error.response?.data?.error || 'Failed to open chat')
+    } finally {
+      setChatLoading(prev => ({ ...prev, [bookingId]: false }))
     }
   }
 
@@ -135,6 +151,15 @@ export default function MyBookings() {
                       <a href={`/mentors/${booking.mentorId?._id}`}>
                         <Button variant="ghost" size="sm">View Profile</Button>
                       </a>
+                      {booking.status === 'confirmed' && (
+                        <Button 
+                          size="sm"
+                          onClick={() => handleOpenChat(booking._id)}
+                          disabled={chatLoading[booking._id]}
+                        >
+                          {chatLoading[booking._id] ? '...' : '💬 Open Chat'}
+                        </Button>
+                      )}
                       {(booking.status === 'pending' || booking.status === 'confirmed') && (
                         <Button 
                           variant="destructive" 

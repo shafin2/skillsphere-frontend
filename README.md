@@ -6,6 +6,8 @@ A modern React frontend for the SkillSphere mentorship platform built with Vite,
 
 - ✅ **Authentication System**: Complete auth flow with email/password and Google OAuth
 - ✅ **Role-based Access**: Learner, Mentor, and Admin roles with appropriate guards
+- ✅ **Booking System**: Learners can book sessions with mentors
+- ✅ **Real-time Chat**: Stream Chat integration for confirmed bookings
 - ✅ **Theme System**: Dark/light mode with localStorage persistence
 - ✅ **Reusable Components**: Semantic UI components with consistent design tokens
 - ✅ **Responsive Design**: Mobile-first approach with Tailwind CSS
@@ -18,6 +20,7 @@ A modern React frontend for the SkillSphere mentorship platform built with Vite,
 - **Tailwind CSS 3** - Utility-first CSS framework
 - **React Router 6** - Client-side routing
 - **Axios** - HTTP client with interceptors
+- **Stream Chat React** - Real-time messaging components
 
 ## Project Structure
 
@@ -45,7 +48,11 @@ src/
 │   │   ├── ResetPassword.jsx
 │   │   └── OAuthSuccess.jsx
 │   ├── Landing.jsx      # Marketing landing page
-│   └── Dashboard.jsx    # Main app dashboard
+│   ├── Dashboard.jsx    # Main app dashboard
+│   ├── MentorSearch.jsx # Browse available mentors
+│   ├── MyBookings.jsx   # Learner's bookings with chat access
+│   ├── MentorBookings.jsx # Mentor's booking requests
+│   └── Chat.jsx         # Real-time chat interface
 └── App.jsx              # Root component with routing
 ```
 
@@ -69,6 +76,7 @@ Create a `.env` file:
 ```env
 VITE_APP_NAME=SkillSphere
 VITE_API_URL=http://localhost:5000
+VITE_STREAM_API_KEY=your_stream_api_key
 ```
 
 ## Development
@@ -166,13 +174,41 @@ function MyComponent() {
 - `/verify-email` - Verify email with token
 - `/oauth-success` - Google OAuth callback
 - `/dashboard` - Main authenticated page
+- `/mentors` - Browse available mentors
+- `/mentors/:id` - Mentor profile and booking
+- `/bookings` - Learner's bookings
+- `/mentor-bookings` - Mentor's booking requests
+- `/chat/:channelId` - Real-time chat for confirmed bookings
+
+## Chat System
+
+Real-time chat is available for confirmed bookings using Stream Chat.
+
+### Features
+- **Secure Access**: Only available for confirmed bookings between mentor and learner
+- **Real-time Messaging**: Instant message delivery and read receipts
+- **File Sharing**: Upload and share files within chat
+- **Message History**: Persistent chat history
+- **Mobile Responsive**: Works seamlessly on all devices
+
+### How to use
+1. **Book a Session**: Learner books a session with a mentor
+2. **Mentor Confirms**: Mentor confirms the booking request
+3. **Chat Access**: Both parties see "💬 Open Chat" button on their booking pages
+4. **Start Chatting**: Click the button to open the real-time chat interface
+
+### Technical Implementation
+- Uses Stream Chat React components
+- Backend creates secure channels with format `booking_{bookingId}`
+- Authentication handled via Stream tokens from backend
+- Channel access restricted to booking participants only
 
 ## Next Steps
 
-Ready for backend integration! The frontend is configured to work with the Node.js backend according to the provided frontend guide.
+The SkillSphere platform is now feature-complete with authentication, booking system, and real-time chat!
 
 To continue development:
 1. Start the backend server on `localhost:5000`
-2. Test the auth flow end-to-end
-3. Add role-specific features (mentor management, session booking, etc.)
-4. Implement real-time features with WebSockets
+2. Set up your Stream Chat account and add API keys to `.env`
+3. Test the complete flow: signup → book session → confirm → chat
+4. Add advanced features like video calls, payment integration, or mentor ratings

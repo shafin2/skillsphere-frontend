@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import http from '../lib/http.js'
 import Button from '../components/ui/Button.jsx'
 import { Card, CardContent } from '../components/ui/Card.jsx'
@@ -8,8 +9,10 @@ import { useTheme } from '../context/ThemeProvider.jsx'
 export default function MentorBookings() {
   const { user, logout } = useAuth()
   const { isDark, toggleTheme } = useTheme()
+  const navigate = useNavigate()
   const [bookings, setBookings] = useState([])
   const [loading, setLoading] = useState(true)
+  const [chatLoading, setChatLoading] = useState({})
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -44,6 +47,19 @@ export default function MentorBookings() {
       ))
     } catch (error) {
       alert('Failed to reject booking')
+    }
+  }
+
+  const handleOpenChat = async (bookingId) => {
+    setChatLoading(prev => ({ ...prev, [bookingId]: true }))
+    
+    try {
+      const { data } = await http.post('/chat/create-channel', { bookingId })
+      navigate(`/chat/${data.channelId}`)
+    } catch (error) {
+      alert(error.response?.data?.error || 'Failed to open chat')
+    } finally {
+      setChatLoading(prev => ({ ...prev, [bookingId]: false }))
     }
   }
 
@@ -162,9 +178,18 @@ export default function MentorBookings() {
                         </>
                       )}
                       {booking.status === 'confirmed' && (
-                        <span className="text-sm text-success font-medium px-3 py-1 bg-success/10 rounded">
-                          Confirmed ✓
-                        </span>
+                        <>
+                          <Button 
+                            size="sm"
+                            onClick={() => handleOpenChat(booking._id)}
+                            disabled={chatLoading[booking._id]}
+                          >
+                            {chatLoading[booking._id] ? '...' : '💬 Open Chat'}
+                          </Button>
+                          <span className="text-sm text-success font-medium px-3 py-1 bg-success/10 rounded">
+                            Confirmed ✓
+                          </span>
+                        </>
                       )}
                       {booking.status === 'cancelled' && (
                         <span className="text-sm text-destructive font-medium px-3 py-1 bg-destructive/10 rounded">
