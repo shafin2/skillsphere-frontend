@@ -1,13 +1,10 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-:root {
-  color-scheme: light dark;
-}
-
-html, body, #root {
+/* Minimal base styles to ensure full-height layout */
+html,
+body,
+#root {
   height: 100%;
-}
-
-body {
-  min-height: 100%;
 }

@@ -1,13 +1,23 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React</title>
+    <title>SkillSphere</title>
+    <script>
+      // Persist and apply dark mode early to avoid FOUC
+      const pref = localStorage.getItem('theme');
+      const mql = window.matchMedia('(prefers-color-scheme: dark)');
+      if (pref === 'dark' || (!pref && mql.matches)) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root" class="min-h-screen bg-lightBg text-slate-900 dark:bg-darkBg dark:text-slate-100"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

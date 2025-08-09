@@ -1,41 +1,43 @@
 /** @type {import('tailwindcss').Config} */
+import typography from '@tailwindcss/typography'
+
 export default {
   darkMode: 'class',
-  content: ['./index.html', './src/**/*.{js,jsx,ts,tsx}'],
+  content: [
+    './index.html',
+    './src/**/*.{js,jsx,ts,tsx}',
+  ],
   theme: {
     extend: {
       colors: {
-        primary: {
-          DEFAULT: '#6C5CE7',
-          50: '#F2F1FF',
-          100: '#E8E6FF',
-          200: '#CCC9FF',
-          300: '#ABA6FF',
-          400: '#8F88FF',
-          500: '#6C5CE7',
-          600: '#5A4CD0',
-          700: '#4A3FB6',
-          800: '#3B3294',
-          900: '#312A7A'
+        primary: '#1D4ED8',
+        secondary: '#9333EA',
+        accent: '#F59E0B',
+        darkBg: '#111827',
+        lightBg: '#F9FAFB',
+      },
+      spacing: {
+        '4.5': '1.125rem',
+        '18': '4.5rem',
+      },
+      typography: {
+        DEFAULT: {
+          css: {
+            a: {
+              color: '#1D4ED8',
+              '&:hover': { color: '#9333EA' },
+            },
+            h1: { scrollMarginTop: '1.25rem' },
+          },
         },
-        accent: {
-          DEFAULT: '#00C2A8',
-          600: '#00A994',
-          700: '#008D7B'
+        dark: {
+          css: {
+            color: '#e5e7eb',
+            a: { color: '#93c5fd' },
+          },
         },
-        muted: {
-          DEFAULT: '#64748B'
-        },
-        background: {
-          light: '#FFFFFF',
-          dark: '#0B1220'
-        },
-        foreground: {
-          light: '#0B1220',
-          dark: '#E6E6EA'
-        }
-      }
-    }
+      },
+    },
   },
-  plugins: []
-} 
+  plugins: [typography],
+}
