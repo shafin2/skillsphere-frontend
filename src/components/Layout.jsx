@@ -29,6 +29,7 @@ import { useTheme } from '../context/ThemeProvider';
 import Button from './ui/Button';
 import Logo from './ui/Logo';
 import NotificationBell from './NotificationBell';
+import FloatingAIButton from './FloatingAIButton';
 
 const Layout = ({ children }) => {
   const { user, logout } = useAuth();
@@ -50,7 +51,6 @@ const Layout = ({ children }) => {
   const getNavigationItems = () => {
     const commonItems = [
       { href: '/dashboard', icon: Home, label: 'Dashboard' },
-      { href: '/ai-assistant', icon: Bot, label: 'AI Learning Assistant' },
       { href: '/ai-mentors', icon: Users, label: 'AI Mentors' },
     ];
 
@@ -322,6 +322,9 @@ const Layout = ({ children }) => {
           }}
         />
       )}
+
+      {/* Floating AI Button */}
+      <FloatingAIButton />
     </div>
   );
 };

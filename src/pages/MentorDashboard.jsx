@@ -56,13 +56,18 @@ const MentorDashboard = () => {
       );
       const uniqueStudents = new Set(bookings.map(b => b.learnerId._id)).size;
 
+      // Calculate earnings based on hourly rate
+      const totalEarnings = completed.reduce((sum, booking) => {
+        return sum + (booking.mentorId?.hourlyRate || 50);
+      }, 0);
+
       setStats(prev => ({
         ...prev,
         totalBookings: bookings.length,
         completedSessions: completed.length,
         pendingRequests: pending.length,
         totalStudents: uniqueStudents,
-        thisMonthEarnings: completed.length * 50 // Assuming $50 per session
+        thisMonthEarnings: totalEarnings
       }));
 
       // Set different booking categories
@@ -73,17 +78,35 @@ const MentorDashboard = () => {
       // Fetch mentor ratings and feedback
       if (user?.id) {
         try {
-          const { data: statsData } = await http.get(`/feedback/mentor/${user.id}/stats`);
+          console.log('Fetching data for mentor ID:', user.id);
+          
+          // Get mentor stats from feedback endpoint  
+          const { data: mentorStats } = await http.get(`/feedback/mentor/${user.id}/stats`);
+          console.log('Mentor stats received:', mentorStats);
+          
           setStats(prev => ({
             ...prev,
-            averageRating: statsData.averageRating || 0,
-            totalReviews: statsData.totalReviews || 0
+            averageRating: mentorStats.averageRating || 0,
+            totalReviews: mentorStats.totalReviews || 0
           }));
 
+          // Get recent feedback from the feedback endpoint
           const { data: feedbackData } = await http.get(`/feedback/mentor/${user.id}?limit=3`);
+          console.log('Feedback data received:', feedbackData);
           setRecentFeedback(feedbackData.feedbacks || []);
+
         } catch (error) {
-          console.error('Error fetching feedback:', error);
+          console.error('Error fetching mentor feedback data:', error);
+          console.log('Error status:', error.response?.status);
+          console.log('Error response:', error.response?.data);
+          
+          // The feedback endpoints should work with our updated routes
+          setStats(prev => ({
+            ...prev,
+            averageRating: 0,
+            totalReviews: 0
+          }));
+          setRecentFeedback([]);
         }
       }
 

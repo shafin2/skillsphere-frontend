@@ -14,10 +14,79 @@ const AIMentorInsights = () => {
 
   const fetchMentorInsights = async () => {
     try {
-      const response = await http.get('/ai/mentor-insights');
-      if (response.data.success) {
-        setInsights(response.data.insights);
+      // Try to fetch AI insights first
+      try {
+        const response = await http.get('/ai/mentor-insights');
+        if (response.data.success) {
+          setInsights(response.data.insights);
+          return;
+        }
+      } catch (aiError) {
+        console.log('AI insights endpoint not available, generating from data');
       }
+
+      // Fallback: Generate insights from mentor's actual data
+      const { data: userData } = await http.get('/profile/me');
+      const { data: bookingsData } = await http.get('/bookings');
+      
+      const bookings = bookingsData.bookings || [];
+      const completed = bookings.filter(b => b.status === 'completed');
+      const pending = bookings.filter(b => b.status === 'pending');
+      
+      // Calculate average rating from user's ratings
+      let averageRating = 0;
+      let totalReviews = 0;
+      if (userData.user && userData.user.ratings && userData.user.ratings.length > 0) {
+        const totalRating = userData.user.ratings.reduce((sum, rating) => sum + rating.score, 0);
+        averageRating = totalRating / userData.user.ratings.length;
+        totalReviews = userData.user.ratings.length;
+      }
+
+      // Get top requested skills from bookings
+      const skillRequests = bookings
+        .filter(b => b.message)
+        .map(b => b.message.toLowerCase())
+        .join(' ')
+        .split(' ')
+        .filter(word => word.length > 3);
+
+      const skillCounts = {};
+      skillRequests.forEach(skill => {
+        skillCounts[skill] = (skillCounts[skill] || 0) + 1;
+      });
+
+      const topRequestedSkills = Object.entries(skillCounts)
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 5)
+        .map(([skill]) => skill.charAt(0).toUpperCase() + skill.slice(1));
+
+      // Generate AI suggestions based on data
+      const suggestions = [];
+      if (completed.length === 0) {
+        suggestions.push("Complete your profile to attract more students");
+      }
+      if (pending.length > 0) {
+        suggestions.push("Respond quickly to pending booking requests to improve your visibility");
+      }
+      if (averageRating < 4.5 && totalReviews > 0) {
+        suggestions.push("Focus on improving session quality to boost your ratings");
+      }
+      if (userData.user && userData.user.skills && userData.user.skills.length < 3) {
+        suggestions.push("Add more skills to your profile to increase booking opportunities");
+      }
+      if (suggestions.length === 0) {
+        suggestions.push("Great job! Keep maintaining high-quality mentoring sessions");
+        suggestions.push("Consider expanding your availability to reach more students");
+      }
+
+      const insights = {
+        averageRating: averageRating.toFixed(1),
+        totalSessions: completed.length,
+        topRequestedSkills: topRequestedSkills.length > 0 ? topRequestedSkills : ['JavaScript', 'React', 'Node.js'],
+        suggestions: suggestions
+      };
+
+      setInsights(insights);
     } catch (error) {
       console.error('Failed to fetch mentor insights:', error);
       setError('Failed to load insights');

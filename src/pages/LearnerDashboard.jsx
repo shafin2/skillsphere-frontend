@@ -67,11 +67,14 @@ const LearnerDashboard = () => {
       const pending = bookings.filter(b => b.status === 'pending');
       const recentCompleted = completed.slice(0, 3); // Last 3 completed
 
+      // Calculate total learning hours (assuming 1 hour per session)
+      const totalLearningHours = completed.length * 1;
+
       setStats({
         totalBookings: bookings.length,
         completedSessions: completed.length,
         upcomingBookings: upcoming.length,
-        totalLearningHours: completed.length * 1 // Assuming 1 hour per session
+        totalLearningHours: totalLearningHours
       });
 
       // Set different booking categories
@@ -79,9 +82,37 @@ const LearnerDashboard = () => {
       setUpcomingBookings(upcoming.slice(0, 3));
       setPendingBookings(pending.slice(0, 3));
 
-      // TODO: Fetch recommended mentors based on user interests
-      // For now, we'll use a placeholder
-      setRecommendedMentors([]);
+      // Fetch recommended mentors based on user skills
+      try {
+        if (user?.skills && user.skills.length > 0) {
+          // Get mentors that match user's skills
+          const { data: mentorsData } = await http.get('/mentors');
+          const allMentors = mentorsData.mentors || [];
+          
+          // Filter mentors based on user's skills
+          const matchingMentors = allMentors
+            .filter(mentor => 
+              mentor.skills && 
+              mentor.skills.some(skill => 
+                user.skills.some(userSkill => 
+                  userSkill.toLowerCase().includes(skill.toLowerCase()) ||
+                  skill.toLowerCase().includes(userSkill.toLowerCase())
+                )
+              )
+            )
+            .slice(0, 4); // Take top 4 matches
+          
+          setRecommendedMentors(matchingMentors);
+        } else {
+          // If no skills, get top rated mentors
+          const { data: mentorsData } = await http.get('/mentors');
+          const topMentors = (mentorsData.mentors || []).slice(0, 4);
+          setRecommendedMentors(topMentors);
+        }
+      } catch (mentorError) {
+        console.log('Error fetching recommended mentors:', mentorError);
+        setRecommendedMentors([]);
+      }
 
     } catch (error) {
       console.error('Error fetching dashboard data:', error);

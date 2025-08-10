@@ -6,6 +6,19 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card.
 import FormField from '../components/ui/FormField.jsx'
 import http from '../lib/http.js'
 
+const COMMON_SKILLS = [
+  'JavaScript', 'Python', 'React', 'Node.js', 'TypeScript', 'Java', 'C++', 'HTML/CSS',
+  'SQL', 'MongoDB', 'AWS', 'Docker', 'Git', 'Machine Learning', 'Data Science',
+  'UI/UX Design', 'Project Management', 'Agile', 'DevOps', 'Mobile Development'
+]
+
+const TIMEZONES = [
+  'UTC-12:00', 'UTC-11:00', 'UTC-10:00', 'UTC-09:00', 'UTC-08:00', 'UTC-07:00',
+  'UTC-06:00', 'UTC-05:00', 'UTC-04:00', 'UTC-03:00', 'UTC-02:00', 'UTC-01:00',
+  'UTC+00:00', 'UTC+01:00', 'UTC+02:00', 'UTC+03:00', 'UTC+04:00', 'UTC+05:00',
+  'UTC+06:00', 'UTC+07:00', 'UTC+08:00', 'UTC+09:00', 'UTC+10:00', 'UTC+11:00', 'UTC+12:00'
+]
+
 export default function MentorSearch() {
   const [mentors, setMentors] = useState([])
   const [loading, setLoading] = useState(true)
@@ -72,13 +85,20 @@ export default function MentorSearch() {
       <Card className="mb-8 shadow-sm">
         <CardContent className="p-4 sm:p-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            <FormField 
-              label="Skill" 
-              name="skill" 
-              value={filters.skill} 
-              onChange={(e) => updateFilter('skill', e.target.value)} 
-              placeholder="e.g., React" 
-            />
+            <div>
+              <label className="block text-sm font-medium mb-2 text-gray-700">Skill</label>
+              <select
+                className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                value={filters.skill}
+                onChange={(e) => updateFilter('skill', e.target.value)}
+              >
+                <option value="">All Skills</option>
+                {COMMON_SKILLS.map(skill => (
+                  <option key={skill} value={skill}>{skill}</option>
+                ))}
+              </select>
+            </div>
+            
             <FormField 
               label="Expertise" 
               name="expertise" 
@@ -95,10 +115,9 @@ export default function MentorSearch() {
                 onChange={(e) => updateFilter('timezone', e.target.value)}
               >
                 <option value="">All Timezones</option>
-                <option value="UTC-8">Pacific (UTC-8)</option>
-                <option value="UTC-5">Eastern (UTC-5)</option>
-                <option value="UTC+0">GMT (UTC+0)</option>
-                <option value="UTC+5:30">IST (UTC+5:30)</option>
+                {TIMEZONES.map(timezone => (
+                  <option key={timezone} value={timezone}>{timezone}</option>
+                ))}
               </select>
             </div>
 

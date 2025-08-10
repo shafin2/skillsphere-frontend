@@ -25,16 +25,20 @@ export default function Transcript() {
       const sessionResponse = await http.get(`/sessions/${bookingId}`)
       setSession(sessionResponse.data.session)
 
-      // Get transcript if available
-      if (sessionResponse.data.session.transcriptId) {
+      // Try to get transcript
+      try {
         const transcriptResponse = await http.get(`/sessions/${sessionResponse.data.session._id}/transcript`)
         setTranscript(transcriptResponse.data.transcript)
+      } catch (transcriptError) {
+        // Transcript doesn't exist or not accessible
+        console.log('No transcript available for this session:', transcriptError.response?.data?.message || transcriptError.message)
+        setTranscript(null)
       }
 
       // Load existing notes
       setNotes(sessionResponse.data.session.notes || '')
     } catch (error) {
-      console.error('Error fetching transcript:', error)
+      console.error('Error fetching session:', error)
     } finally {
       setLoading(false)
     }
@@ -61,10 +65,10 @@ export default function Transcript() {
       `Date: ${new Date(session.bookingId.date).toLocaleDateString()}`,
       `Time: ${session.bookingId.time}`,
       `Participants: ${session.mentorId.fullName}, ${session.learnerId.fullName}`,
-      `Duration: ${session.duration || 'N/A'} minutes`,
+      `Duration: ${transcript.transcript?.duration ? Math.floor(transcript.transcript.duration / 60) + ' minutes' : 'N/A'}`,
       ``,
       `Transcript:`,
-      `${transcript.content || 'No transcript content available'}`,
+      `${transcript.transcript?.fullText || transcript.content || 'No transcript content available'}`,
       ``,
       `Notes:`,
       `${notes || 'No notes added'}`
@@ -109,6 +113,9 @@ export default function Transcript() {
   const otherUser = session.mentorId._id === user.id 
     ? session.learnerId 
     : session.mentorId
+
+  // Check if current user is the mentor (can edit notes)
+  const isMentor = session.mentorId._id === user.id
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -185,12 +192,17 @@ export default function Transcript() {
             <div className="prose max-w-none dark:prose-invert">
               <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border">
                 <pre className="whitespace-pre-wrap text-sm text-gray-800 dark:text-gray-200 font-mono">
-                  {transcript.content || 'Transcript content will appear here once available.'}
+                  {transcript.transcript?.fullText || transcript.content || 'Transcript content will appear here once available.'}
                 </pre>
               </div>
-              {transcript.confidence && (
+              {transcript.metadata?.recordingQuality && (
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                  Transcript confidence: {Math.round(transcript.confidence * 100)}%
+                  Recording quality: {transcript.metadata.recordingQuality}
+                </p>
+              )}
+              {transcript.transcript?.duration && (
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  Duration: {Math.floor(transcript.transcript.duration / 60)} minutes
                 </p>
               )}
             </div>
@@ -216,37 +228,58 @@ export default function Transcript() {
               <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
             </svg>
             Session Notes
+            {!isMentor && (
+              <span className="text-sm text-gray-500 font-normal">(Read-only)</span>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Add your notes about this session..."
-              className="w-full h-32 p-3 border border-gray-300 dark:border-gray-600 rounded-md resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:text-white"
-            />
-            <div className="flex justify-end">
-              <Button
-                onClick={saveNotes}
-                disabled={savingNotes}
-                className="flex items-center gap-2"
-              >
-                {savingNotes ? (
-                  <>
-                    <div className="w-4 h-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                    Saving...
-                  </>
+            {isMentor ? (
+              // Mentor can edit notes
+              <>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Add your notes about this session..."
+                  className="w-full h-32 p-3 border border-gray-300 dark:border-gray-600 rounded-md resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:text-white"
+                />
+                <div className="flex justify-end">
+                  <Button
+                    onClick={saveNotes}
+                    disabled={savingNotes}
+                    className="flex items-center gap-2"
+                  >
+                    {savingNotes ? (
+                      <>
+                        <div className="w-4 h-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h5v5.586l-1.293-1.293zM9 4a1 1 0 012 0v2H9V4z" />
+                        </svg>
+                        Save Notes
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </>
+            ) : (
+              // Learner can only view notes
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
+                {notes ? (
+                  <pre className="whitespace-pre-wrap text-sm text-gray-800 dark:text-gray-200 font-mono">
+                    {notes}
+                  </pre>
                 ) : (
-                  <>
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h5v5.586l-1.293-1.293zM9 4a1 1 0 012 0v2H9V4z" />
-                    </svg>
-                    Save Notes
-                  </>
+                  <p className="text-gray-500 dark:text-gray-400 italic">
+                    No notes have been added by the mentor yet.
+                  </p>
                 )}
-              </Button>
-            </div>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

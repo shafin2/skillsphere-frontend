@@ -280,12 +280,12 @@ export default function MyBookings() {
                   {/* Actions section */}
                   <div className="p-6">
                     <div className="flex flex-col gap-4">
-                      {/* Main action buttons */}
+                      {/* Main action buttons - First Row */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                         <Button 
                           variant="outline" 
                           size="sm"
-                          className="flex items-center justify-center gap-2 h-10"
+                          className="flex items-center justify-center gap-2 h-10 border-2 border-gray-300 hover:border-gray-400"
                           onClick={() => window.open(`/mentors/${booking.mentorId?._id}`, '_blank')}
                         >
                           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -320,33 +320,41 @@ export default function MyBookings() {
                             </Button>
                           </>
                         )}
+                        
+                        {/* Placeholder buttons to maintain grid layout when confirmed buttons are not shown */}
+                        {booking.status !== 'confirmed' && (
+                          <>
+                            <div className="h-10"></div>
+                            <div className="h-10"></div>
+                          </>
+                        )}
                       </div>
 
-                      {/* Secondary action buttons */}
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {/* Secondary action buttons - Second Row */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                         {booking.status === 'confirmed' && (
                           <>
                             <Button 
                               size="sm"
                               onClick={() => handleAddToGoogleCalendar(booking)}
                               variant="ghost"
-                              className="flex items-center justify-center gap-1 text-xs border border-gray-200 dark:border-gray-600 h-9"
+                              className="flex items-center justify-center gap-2 h-10 border border-gray-200 dark:border-gray-600"
                             >
-                              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
                               </svg>
-                              Google
+                              Google Calendar
                             </Button>
                             <Button 
                               size="sm"
                               onClick={() => handleDownloadICS(booking)}
                               variant="ghost"
-                              className="flex items-center justify-center gap-1 text-xs border border-gray-200 dark:border-gray-600 h-9"
+                              className="flex items-center justify-center gap-2 h-10 border border-gray-200 dark:border-gray-600"
                             >
-                              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
                               </svg>
-                              .ics
+                              Download .ics
                             </Button>
                           </>
                         )}
@@ -356,12 +364,12 @@ export default function MyBookings() {
                             size="sm"
                             onClick={() => handleViewTranscript(booking._id)}
                             variant="ghost"
-                            className="flex items-center justify-center gap-1 text-xs border border-gray-200 dark:border-gray-600 h-9"
+                            className="flex items-center justify-center gap-2 h-10 border border-gray-200 dark:border-gray-600"
                           >
-                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                               <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
                             </svg>
-                            Notes
+                            View Notes
                           </Button>
                         )}
                         
@@ -369,12 +377,12 @@ export default function MyBookings() {
                           <Button 
                             size="sm"
                             onClick={() => handleOpenFeedback(booking._id, booking.mentorId?.fullName)}
-                            className="bg-yellow-500 hover:bg-yellow-600 text-white flex items-center justify-center gap-1 text-xs h-9"
+                            className="bg-yellow-500 hover:bg-yellow-600 text-white flex items-center justify-center gap-2 h-10"
                           >
-                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                             </svg>
-                            Rate
+                            Rate Session
                           </Button>
                         )}
                         
@@ -383,13 +391,18 @@ export default function MyBookings() {
                             variant="destructive" 
                             size="sm"
                             onClick={() => handleCancel(booking._id)}
-                            className="flex items-center justify-center gap-1 text-xs col-span-2 h-9"
+                            className="flex items-center justify-center gap-2 h-10 col-span-3"
                           >
-                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                               <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                             </svg>
                             Cancel Booking
                           </Button>
+                        )}
+                        
+                        {/* Placeholder buttons to maintain grid layout */}
+                        {booking.status === 'confirmed' && !feedbackStatus[booking._id] && (
+                          <div className="h-10"></div>
                         )}
                       </div>
                     </div>

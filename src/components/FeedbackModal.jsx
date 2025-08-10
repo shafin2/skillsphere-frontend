@@ -151,18 +151,17 @@ const FeedbackModal = ({
                     onClick={() => handleStarClick(star)}
                     onMouseEnter={() => handleStarHover(star)}
                     onMouseLeave={handleStarLeave}
-                    className="focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                    className="focus:outline-none focus:ring-2 focus:ring-blue-500 rounded p-1"
                     disabled={isSubmitting}
                   >
-                    <span
-                      className={`text-2xl transition-colors ${
+                    <Star
+                      size={24}
+                      className={`transition-all duration-200 ${
                         star <= (hoveredRating || rating)
-                          ? 'text-yellow-400'
-                          : 'text-gray-300'
+                          ? 'text-yellow-400 fill-yellow-400'
+                          : 'text-gray-300 hover:text-gray-400'
                       }`}
-                    >
-                      ⭐
-                    </span>
+                    />
                   </button>
                 ))}
               </div>
