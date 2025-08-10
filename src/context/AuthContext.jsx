@@ -26,8 +26,8 @@ export function AuthProvider({ children }) {
           const { data } = await http.get('/profile/me')
           setUser(data.user)
           
-          // Check if profile is incomplete and user is authenticated
-          if (data.user && !data.user.isProfileComplete) {
+          // Check if profile is incomplete and user is authenticated (but not admin)
+          if (data.user && !data.user.isProfileComplete && !data.user.roles?.includes('admin')) {
             setShowProfileModal(true)
           }
         } catch (error) {
@@ -35,7 +35,7 @@ export function AuthProvider({ children }) {
           try {
             const { data: authData } = await http.get('/auth/me')
             setUser(authData.user)
-            if (authData.user && !authData.user.isProfileComplete) {
+            if (authData.user && !authData.user.isProfileComplete && !authData.user.roles?.includes('admin')) {
               setShowProfileModal(true)
             }
           } catch (authError) {
@@ -57,8 +57,8 @@ export function AuthProvider({ children }) {
       const { data: profileData } = await http.get('/profile/me')
       setUser(profileData.user)
       
-      // Check if profile is incomplete
-      if (profileData.user && !profileData.user.isProfileComplete) {
+      // Check if profile is incomplete (but not for admin users)
+      if (profileData.user && !profileData.user.isProfileComplete && !profileData.user.roles?.includes('admin')) {
         setShowProfileModal(true)
       }
     } catch (error) {
