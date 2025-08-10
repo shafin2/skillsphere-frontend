@@ -79,14 +79,6 @@ export default function MyBookings() {
     }
   }
 
-  const handleJoinCall = (bookingId) => {
-    navigate(`/call/${bookingId}`)
-  }
-
-  const handleViewTranscript = (bookingId) => {
-    navigate(`/transcript/${bookingId}`)
-  }
-
   const handleOpenFeedback = (bookingId, mentorName) => {
     setFeedbackModal({
       isOpen: true,
@@ -204,6 +196,14 @@ export default function MyBookings() {
     } finally {
       setChatLoading(prev => ({ ...prev, [bookingId]: false }))
     }
+  }
+
+  const handleJoinCall = (bookingId) => {
+    navigate(`/call/${bookingId}`)
+  }
+
+  const handleViewTranscript = (bookingId) => {
+    navigate(`/transcript/${bookingId}`)
   }
 
   return (

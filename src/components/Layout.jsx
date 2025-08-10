@@ -56,13 +56,13 @@ const Layout = ({ children }) => {
         ...commonItems,
         { href: '/mentors', icon: Search, label: 'Find Mentors' },
         { href: '/bookings', icon: Calendar, label: 'My Bookings' },
-        { href: '/chat', icon: MessageSquare, label: 'Messages' },
+        { href: '/messages', icon: MessageSquare, label: 'Messages' },
       ];
     } else if (isMentor) {
       return [
         ...commonItems,
         { href: '/mentor-bookings', icon: Calendar, label: 'Booking Requests' },
-        { href: '/chat', icon: MessageSquare, label: 'Messages' },
+        { href: '/messages', icon: MessageSquare, label: 'Messages' },
       ];
     }
 
