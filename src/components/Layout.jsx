@@ -20,7 +20,9 @@ import {
   Facebook,
   Twitter,
   Linkedin,
-  Instagram
+  Instagram,
+  Bot,
+  Users
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeProvider';
@@ -48,7 +50,8 @@ const Layout = ({ children }) => {
   const getNavigationItems = () => {
     const commonItems = [
       { href: '/dashboard', icon: Home, label: 'Dashboard' },
-      { href: '/profile', icon: User, label: 'Profile' },
+      { href: '/ai-assistant', icon: Bot, label: 'AI Learning Assistant' },
+      { href: '/ai-mentors', icon: Users, label: 'AI Mentors' },
     ];
 
     if (isLearner) {

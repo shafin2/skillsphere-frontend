@@ -28,6 +28,8 @@ import Messages from './pages/Messages.jsx'
 import ChatPage from './pages/Chat.jsx'
 import Meeting from './pages/Meeting.jsx'
 import Transcript from './pages/Transcript.jsx'
+import AILearningAssistant from './pages/AILearningAssistant.jsx'
+import AIMentors from './pages/AIMentors.jsx'
 
 function AppContent() {
   const { user, showProfileModal, updateUserProfile } = useAuth()
@@ -104,6 +106,22 @@ function AppContent() {
               <ProtectedRoute requireAuth={true}>
                 <Layout>
                   <Profile />
+                </Layout>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/ai-assistant" element={
+              <ProtectedRoute requireAuth={true}>
+                <Layout>
+                  <AILearningAssistant />
+                </Layout>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/ai-mentors" element={
+              <ProtectedRoute requireAuth={true}>
+                <Layout>
+                  <AIMentors />
                 </Layout>
               </ProtectedRoute>
             } />

@@ -11,11 +11,14 @@ import {
   ChevronRight,
   Award,
   DollarSign,
-  Eye
+  Eye,
+  Bot
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import Button from '../components/ui/Button';
+import AIBanner from '../components/AIBanner';
+import AIMentorInsights from '../components/AIMentorInsights';
 import http from '../lib/http';
 
 const MentorDashboard = () => {
@@ -146,12 +149,18 @@ const MentorDashboard = () => {
       {/* Welcome Section */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          Welcome back, {user?.fullName || user?.name}! 🌟
+          Welcome back, {user?.fullName || user?.name}! 🎓
         </h1>
         <p className="text-gray-600 dark:text-gray-400 mt-2">
-          Ready to inspire and mentor your students?
+          Ready to inspire and guide your students today?
         </p>
       </div>
+
+      {/* AI Banner */}
+      <AIBanner userType="mentor" />
+
+      {/* AI Mentor Insights */}
+      <AIMentorInsights />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

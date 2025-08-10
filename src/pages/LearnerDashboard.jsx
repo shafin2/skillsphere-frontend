@@ -11,11 +11,14 @@ import {
   MessageSquare,
   Video,
   ChevronRight,
-  Award
+  Award,
+  Bot
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import Button from '../components/ui/Button';
+import AIBanner from '../components/AIBanner';
+import AIRecommendedMentors from '../components/AIRecommendedMentors';
 import http from '../lib/http';
 
 const LearnerDashboard = () => {
@@ -150,6 +153,12 @@ const LearnerDashboard = () => {
           Ready to continue your learning journey?
         </p>
       </div>
+
+      {/* AI Banner */}
+      <AIBanner userType="learner" />
+
+      {/* AI Recommended Mentors */}
+      <AIRecommendedMentors />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
