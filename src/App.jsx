@@ -21,9 +21,12 @@ import VerifyEmailRequired from './pages/VerifyEmailRequired.jsx'
 import Profile from './pages/Profile.jsx'
 import MentorSearch from './pages/MentorSearch.jsx'
 import MentorProfile from './pages/MentorProfile.jsx'
+import MentorDetails from './pages/MentorDetails.jsx'
 import MyBookings from './pages/MyBookings.jsx'
 import MentorBookings from './pages/MentorBookings.jsx'
 import ChatPage from './pages/Chat.jsx'
+import VideoCallPage from './pages/VideoCallPage.jsx'
+import TranscriptPage from './pages/TranscriptPage.jsx'
 
 function AppContent() {
   const { user, showProfileModal, updateUserProfile } = useAuth()
@@ -84,7 +87,7 @@ function AppContent() {
             } />
 
             <Route path="/mentors" element={<MentorSearch />} />
-            <Route path="/mentors/:id" element={<MentorProfile />} />
+            <Route path="/mentors/:id" element={<MentorDetails />} />
 
             <Route path="/profile" element={
               <ProtectedRoute requireAuth={true}>
@@ -107,6 +110,18 @@ function AppContent() {
             <Route path="/chat/:channelId" element={
               <ProtectedRoute requireAuth={true}>
                 <ChatPage />
+              </ProtectedRoute>
+            } />
+
+            <Route path="/call/:bookingId" element={
+              <ProtectedRoute requireAuth={true}>
+                <VideoCallPage />
+              </ProtectedRoute>
+            } />
+
+            <Route path="/transcript/:bookingId" element={
+              <ProtectedRoute requireAuth={true}>
+                <TranscriptPage />
               </ProtectedRoute>
             } />
             

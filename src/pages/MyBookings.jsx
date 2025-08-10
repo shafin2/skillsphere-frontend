@@ -5,6 +5,7 @@ import Button from '../components/ui/Button.jsx'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useTheme } from '../context/ThemeProvider.jsx'
+import FeedbackModal from '../components/FeedbackModal.jsx'
 
 export default function MyBookings() {
   const { user, logout } = useAuth()
@@ -13,12 +14,34 @@ export default function MyBookings() {
   const [bookings, setBookings] = useState([])
   const [loading, setLoading] = useState(true)
   const [chatLoading, setChatLoading] = useState({})
+  const [feedbackStatus, setFeedbackStatus] = useState({}) // Track feedback status per booking
+  const [feedbackModal, setFeedbackModal] = useState({
+    isOpen: false,
+    bookingId: null,
+    mentorName: ''
+  })
 
   useEffect(() => {
     const fetchBookings = async () => {
       try {
         const { data } = await http.get('/bookings')
         setBookings(data.bookings)
+        
+        // Check feedback status for completed bookings
+        const completedBookings = data.bookings.filter(b => b.status === 'completed')
+        const feedbackChecks = {}
+        
+        for (const booking of completedBookings) {
+          try {
+            const response = await http.get(`/feedback/can-review/${booking._id}`)
+            feedbackChecks[booking._id] = response.data.canReview
+          } catch (error) {
+            console.error(`Error checking feedback status for booking ${booking._id}:`, error)
+            feedbackChecks[booking._id] = false
+          }
+        }
+        
+        setFeedbackStatus(feedbackChecks)
       } finally {
         setLoading(false)
       }
@@ -50,6 +73,39 @@ export default function MyBookings() {
     } finally {
       setChatLoading(prev => ({ ...prev, [bookingId]: false }))
     }
+  }
+
+  const handleJoinCall = (bookingId) => {
+    navigate(`/call/${bookingId}`)
+  }
+
+  const handleViewTranscript = (bookingId) => {
+    navigate(`/transcript/${bookingId}`)
+  }
+
+  const handleOpenFeedback = (bookingId, mentorName) => {
+    setFeedbackModal({
+      isOpen: true,
+      bookingId,
+      mentorName
+    })
+  }
+
+  const handleCloseFeedback = () => {
+    setFeedbackModal({
+      isOpen: false,
+      bookingId: null,
+      mentorName: ''
+    })
+  }
+
+  const handleFeedbackSuccess = (feedback) => {
+    console.log('Feedback submitted successfully:', feedback)
+    // Update feedback status to hide the button
+    setFeedbackStatus(prev => ({
+      ...prev,
+      [feedbackModal.bookingId]: false
+    }))
   }
 
   const getStatusColor = (status) => {
@@ -119,56 +175,106 @@ export default function MyBookings() {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {bookings.map(booking => (
-              <Card key={booking._id}>
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-4">
+              <Card key={booking._id} className="overflow-hidden">
+                <CardContent className="p-0">
+                  {/* Mobile-first responsive layout */}
+                  <div className="flex flex-col lg:flex-row">
+                    {/* Mentor info section */}
+                    <div className="flex items-start gap-4 p-6 flex-1">
                       <img 
                         src={booking.mentorId?.avatar || '/vite.svg'} 
                         alt={booking.mentorId?.fullName} 
-                        className="h-12 w-12 rounded-full object-cover border border-border"
+                        className="h-16 w-16 lg:h-12 lg:w-12 rounded-full object-cover border border-border flex-shrink-0"
                       />
-                      <div>
-                        <h3 className="font-semibold text-lg">{booking.mentorId?.fullName}</h3>
-                        <div className="flex items-center gap-4 text-sm text-muted mt-1">
-                          <span>📅 {formatDate(booking.date)}</span>
-                          <span>🕐 {formatTime(booking.time)}</span>
-                          <span className={`font-medium capitalize ${getStatusColor(booking.status)}`}>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-lg lg:text-base truncate">{booking.mentorId?.fullName}</h3>
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-muted mt-1">
+                          <span className="flex items-center gap-1">
+                            📅 {formatDate(booking.date)}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            🕐 {formatTime(booking.time)}
+                          </span>
+                          <span className={`font-medium capitalize ${getStatusColor(booking.status)} inline-flex items-center px-2 py-1 rounded-full text-xs bg-opacity-10`}>
                             {booking.status}
                           </span>
                         </div>
                         {booking.message && (
-                          <p className="text-sm text-foreground/80 mt-2 max-w-md">
+                          <p className="text-sm text-foreground/80 mt-3 lg:mt-2 line-clamp-2">
                             <strong>Message:</strong> {booking.message}
                           </p>
                         )}
                       </div>
                     </div>
 
-                    <div className="flex gap-2">
-                      <a href={`/mentors/${booking.mentorId?._id}`}>
-                        <Button variant="ghost" size="sm">View Profile</Button>
-                      </a>
-                      {booking.status === 'confirmed' && (
-                        <Button 
-                          size="sm"
-                          onClick={() => handleOpenChat(booking._id)}
-                          disabled={chatLoading[booking._id]}
-                        >
-                          {chatLoading[booking._id] ? '...' : '💬 Open Chat'}
-                        </Button>
-                      )}
-                      {(booking.status === 'pending' || booking.status === 'confirmed') && (
-                        <Button 
-                          variant="destructive" 
-                          size="sm"
-                          onClick={() => handleCancel(booking._id)}
-                        >
-                          Cancel
-                        </Button>
-                      )}
+                    {/* Actions section */}
+                    <div className="border-t lg:border-t-0 lg:border-l border-border p-4 lg:p-6 bg-gray-50/50">
+                      <div className="flex flex-col gap-3 lg:min-w-[300px]">
+                        {/* Primary actions row */}
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 gap-2">
+                          <a href={`/mentors/${booking.mentorId?._id}`} className="col-span-1">
+                            <Button variant="ghost" size="sm" className="w-full text-xs">
+                              View Profile
+                            </Button>
+                          </a>
+                          
+                          {booking.status === 'confirmed' && (
+                            <>
+                              <Button 
+                                size="sm"
+                                onClick={() => handleJoinCall(booking._id)}
+                                className="bg-green-600 hover:bg-green-700 text-white text-xs w-full"
+                              >
+                                📹 Join Call
+                              </Button>
+                              <Button 
+                                size="sm"
+                                onClick={() => handleOpenChat(booking._id)}
+                                disabled={chatLoading[booking._id]}
+                                className="col-span-1 text-xs w-full"
+                              >
+                                {chatLoading[booking._id] ? '...' : '💬 Chat'}
+                              </Button>
+                            </>
+                          )}
+                        </div>
+
+                        {/* Secondary actions row */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {(booking.status === 'completed' || booking.status === 'confirmed') && (
+                            <Button 
+                              size="sm"
+                              onClick={() => handleViewTranscript(booking._id)}
+                              className="bg-blue-600 hover:bg-blue-700 text-white text-xs"
+                            >
+                              📄 Transcript
+                            </Button>
+                          )}
+                          
+                          {booking.status === 'completed' && feedbackStatus[booking._id] && (
+                            <Button 
+                              size="sm"
+                              onClick={() => handleOpenFeedback(booking._id, booking.mentorId?.fullName)}
+                              className="bg-yellow-600 hover:bg-yellow-700 text-white text-xs"
+                            >
+                              ⭐ Rate Mentor
+                            </Button>
+                          )}
+                          
+                          {(booking.status === 'pending' || booking.status === 'confirmed') && (
+                            <Button 
+                              variant="destructive" 
+                              size="sm"
+                              onClick={() => handleCancel(booking._id)}
+                              className="text-xs"
+                            >
+                              Cancel
+                            </Button>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
@@ -177,6 +283,15 @@ export default function MyBookings() {
           </div>
         )}
       </main>
+
+      {/* Feedback Modal */}
+      <FeedbackModal
+        isOpen={feedbackModal.isOpen}
+        onClose={handleCloseFeedback}
+        bookingId={feedbackModal.bookingId}
+        mentorName={feedbackModal.mentorName}
+        onSubmitSuccess={handleFeedbackSuccess}
+      />
     </div>
   )
 } 

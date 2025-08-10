@@ -63,6 +63,14 @@ export default function MentorBookings() {
     }
   }
 
+  const handleJoinCall = (bookingId) => {
+    navigate(`/call/${bookingId}`)
+  }
+
+  const handleViewTranscript = (bookingId) => {
+    navigate(`/transcript/${bookingId}`)
+  }
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'pending': return 'text-warning'
@@ -127,30 +135,36 @@ export default function MentorBookings() {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {bookings.map(booking => (
-              <Card key={booking._id}>
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-4">
+              <Card key={booking._id} className="overflow-hidden">
+                <CardContent className="p-0">
+                  {/* Mobile-first responsive layout */}
+                  <div className="flex flex-col lg:flex-row">
+                    {/* Learner info section */}
+                    <div className="flex items-start gap-4 p-6 flex-1">
                       <img 
                         src={booking.learnerId?.avatar || '/vite.svg'} 
                         alt={booking.learnerId?.fullName} 
-                        className="h-12 w-12 rounded-full object-cover border border-border"
+                        className="h-16 w-16 lg:h-12 lg:w-12 rounded-full object-cover border border-border flex-shrink-0"
                       />
-                      <div>
-                        <h3 className="font-semibold text-lg">{booking.learnerId?.fullName}</h3>
-                        <div className="flex items-center gap-4 text-sm text-muted mt-1">
-                          <span>📅 {formatDate(booking.date)}</span>
-                          <span>🕐 {formatTime(booking.time)}</span>
-                          <span className={`font-medium capitalize ${getStatusColor(booking.status)}`}>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-lg lg:text-base truncate">{booking.learnerId?.fullName}</h3>
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-muted mt-1">
+                          <span className="flex items-center gap-1">
+                            📅 {formatDate(booking.date)}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            🕐 {formatTime(booking.time)}
+                          </span>
+                          <span className={`font-medium capitalize ${getStatusColor(booking.status)} inline-flex items-center px-2 py-1 rounded-full text-xs bg-opacity-10`}>
                             {booking.status}
                           </span>
                         </div>
                         {booking.message && (
-                          <div className="mt-3 p-3 bg-surface rounded-md border border-border">
-                            <p className="text-sm text-foreground/80">
-                              <strong>Message from learner:</strong>
+                          <div className="mt-4 p-3 bg-surface rounded-md border border-border">
+                            <p className="text-sm text-foreground/80 font-medium">
+                              Message from learner:
                             </p>
                             <p className="text-sm mt-1">{booking.message}</p>
                           </div>
@@ -158,44 +172,75 @@ export default function MentorBookings() {
                       </div>
                     </div>
 
-                    <div className="flex gap-2">
-                      {booking.status === 'pending' && (
-                        <>
-                          <Button 
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => handleConfirm(booking._id)}
-                          >
-                            Confirm
-                          </Button>
-                          <Button 
-                            variant="destructive" 
-                            size="sm"
-                            onClick={() => handleReject(booking._id)}
-                          >
-                            Reject
-                          </Button>
-                        </>
-                      )}
-                      {booking.status === 'confirmed' && (
-                        <>
-                          <Button 
-                            size="sm"
-                            onClick={() => handleOpenChat(booking._id)}
-                            disabled={chatLoading[booking._id]}
-                          >
-                            {chatLoading[booking._id] ? '...' : '💬 Open Chat'}
-                          </Button>
-                          <span className="text-sm text-success font-medium px-3 py-1 bg-success/10 rounded">
-                            Confirmed ✓
-                          </span>
-                        </>
-                      )}
-                      {booking.status === 'cancelled' && (
-                        <span className="text-sm text-destructive font-medium px-3 py-1 bg-destructive/10 rounded">
-                          Cancelled ✗
-                        </span>
-                      )}
+                    {/* Actions section */}
+                    <div className="border-t lg:border-t-0 lg:border-l border-border p-4 lg:p-6 bg-gray-50/50">
+                      <div className="flex flex-col gap-3 lg:min-w-[320px]">
+                        {booking.status === 'pending' && (
+                          <div className="grid grid-cols-2 gap-2">
+                            <Button 
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => handleConfirm(booking._id)}
+                              className="text-xs"
+                            >
+                              ✓ Confirm
+                            </Button>
+                            <Button 
+                              variant="destructive" 
+                              size="sm"
+                              onClick={() => handleReject(booking._id)}
+                              className="text-xs"
+                            >
+                              ✗ Reject
+                            </Button>
+                          </div>
+                        )}
+                        
+                        {booking.status === 'confirmed' && (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2">
+                            <Button 
+                              size="sm"
+                              onClick={() => handleJoinCall(booking._id)}
+                              className="bg-green-600 hover:bg-green-700 text-white text-xs"
+                            >
+                              📹 Join Call
+                            </Button>
+                            <div className="grid grid-cols-2 gap-2">
+                              <Button 
+                                size="sm"
+                                onClick={() => handleOpenChat(booking._id)}
+                                disabled={chatLoading[booking._id]}
+                                className="text-xs"
+                              >
+                                {chatLoading[booking._id] ? '...' : '💬 Chat'}
+                              </Button>
+                              <Button 
+                                size="sm"
+                                onClick={() => handleViewTranscript(booking._id)}
+                                className="bg-blue-600 hover:bg-blue-700 text-white text-xs"
+                              >
+                                📄 Transcript
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {booking.status === 'completed' && (
+                          <div className="flex items-center justify-center">
+                            <span className="text-sm text-green-600 font-medium px-3 py-2 bg-green-50 rounded-lg border border-green-200">
+                              ✓ Session Completed
+                            </span>
+                          </div>
+                        )}
+                        
+                        {booking.status === 'cancelled' && (
+                          <div className="flex items-center justify-center">
+                            <span className="text-sm text-red-600 font-medium px-3 py-2 bg-red-50 rounded-lg border border-red-200">
+                              ✗ Cancelled
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </CardContent>
