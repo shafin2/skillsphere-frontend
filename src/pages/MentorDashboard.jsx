@@ -30,6 +30,8 @@ const MentorDashboard = () => {
     thisMonthEarnings: 0
   });
   const [recentBookings, setRecentBookings] = useState([]);
+  const [pendingRequests, setPendingRequests] = useState([]);
+  const [upcomingSessions, setUpcomingSessions] = useState([]);
   const [recentFeedback, setRecentFeedback] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -43,22 +45,27 @@ const MentorDashboard = () => {
       const { data: bookingsData } = await http.get('/bookings');
       const bookings = bookingsData.bookings || [];
       
-      // Calculate stats
-      const completed = bookings.filter(b => b.status === 'completed').length;
-      const pending = bookings.filter(b => b.status === 'pending').length;
+      // Separate bookings by status and type
+      const completed = bookings.filter(b => b.status === 'completed');
+      const pending = bookings.filter(b => b.status === 'pending');
+      const upcoming = bookings.filter(b => 
+        b.status === 'confirmed' && new Date(b.date) > new Date()
+      );
       const uniqueStudents = new Set(bookings.map(b => b.learnerId._id)).size;
 
       setStats(prev => ({
         ...prev,
         totalBookings: bookings.length,
-        completedSessions: completed,
-        pendingRequests: pending,
+        completedSessions: completed.length,
+        pendingRequests: pending.length,
         totalStudents: uniqueStudents,
-        thisMonthEarnings: completed * 50 // Assuming $50 per session
+        thisMonthEarnings: completed.length * 50 // Assuming $50 per session
       }));
 
-      // Get recent bookings
-      setRecentBookings(bookings.slice(0, 5));
+      // Set different booking categories
+      setRecentBookings(completed.slice(0, 3));
+      setPendingRequests(pending.slice(0, 3));
+      setUpcomingSessions(upcoming.slice(0, 3));
 
       // Fetch mentor ratings and feedback
       if (user?.id) {
@@ -258,13 +265,116 @@ const MentorDashboard = () => {
         </div>
       </div>
 
-      {/* Recent Activity */}
+      {/* Booking Management */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Bookings */}
+        {/* Pending Requests */}
         <Card>
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-xl font-semibold">Recent Bookings</CardTitle>
+              <CardTitle className="text-lg font-semibold text-yellow-600 dark:text-yellow-400">
+                Pending Requests
+              </CardTitle>
+              <Link to="/mentor-bookings">
+                <Button variant="ghost" size="sm">
+                  View All
+                  <ChevronRight className="w-4 h-4 ml-1" />
+                </Button>
+              </Link>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {pendingRequests.length === 0 ? (
+              <div className="text-center py-6">
+                <Clock className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                <p className="text-sm text-gray-500 dark:text-gray-400">No pending requests</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {pendingRequests.map((booking, index) => (
+                  <div key={booking._id || index} className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <img
+                        src={booking.learnerId?.avatar || '/vite.svg'}
+                        alt={booking.learnerId?.fullName}
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                      <div>
+                        <p className="font-medium text-sm text-gray-900 dark:text-white">
+                          {booking.learnerId?.fullName}
+                        </p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                          {formatDate(booking.date)} at {booking.time}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="px-2 py-1 rounded-full text-xs font-medium text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900/20">
+                      Pending
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Upcoming Sessions */}
+        <Card>
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-semibold text-green-600 dark:text-green-400">
+                Upcoming Sessions
+              </CardTitle>
+              <Link to="/mentor-bookings">
+                <Button variant="ghost" size="sm">
+                  View All
+                  <ChevronRight className="w-4 h-4 ml-1" />
+                </Button>
+              </Link>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {upcomingSessions.length === 0 ? (
+              <div className="text-center py-6">
+                <Calendar className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                <p className="text-sm text-gray-500 dark:text-gray-400">No upcoming sessions</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {upcomingSessions.map((booking, index) => (
+                  <div key={booking._id || index} className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <img
+                        src={booking.learnerId?.avatar || '/vite.svg'}
+                        alt={booking.learnerId?.fullName}
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                      <div>
+                        <p className="font-medium text-sm text-gray-900 dark:text-white">
+                          {booking.learnerId?.fullName}
+                        </p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                          {formatDate(booking.date)} at {booking.time}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="px-2 py-1 rounded-full text-xs font-medium text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/20">
+                      Confirmed
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Recent Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Recent Completed Sessions */}
+        <Card>
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-xl font-semibold">Recent Completed Sessions</CardTitle>
               <Link to="/mentor-bookings">
                 <Button variant="ghost" size="sm">
                   View All
@@ -276,8 +386,8 @@ const MentorDashboard = () => {
           <CardContent>
             {recentBookings.length === 0 ? (
               <div className="text-center py-8">
-                <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500 dark:text-gray-400">No bookings yet</p>
+                <Award className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500 dark:text-gray-400">No completed sessions yet</p>
                 <p className="text-sm text-gray-400 dark:text-gray-500">Students will start booking sessions with you soon!</p>
               </div>
             ) : (
@@ -299,8 +409,8 @@ const MentorDashboard = () => {
                         </p>
                       </div>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
-                      {booking.status}
+                    <span className="px-3 py-1 rounded-full text-xs font-medium text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/20">
+                      Completed
                     </span>
                   </div>
                 ))}

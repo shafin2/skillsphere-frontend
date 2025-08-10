@@ -4,6 +4,12 @@ import http from '../lib/http.js'
 import Button from '../components/ui/Button.jsx'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
+import { 
+  generateGoogleCalendarLink, 
+  generateICSFile, 
+  downloadICSFile, 
+  generateBookingCalendarEvent 
+} from '../utils/calendarUtils.js'
 
 export default function MentorBookings() {
   const { user } = useAuth()
@@ -15,7 +21,7 @@ export default function MentorBookings() {
   useEffect(() => {
     const fetchBookings = async () => {
       try {
-        const { data } = await http.get('/bookings/mentor')
+        const { data } = await http.get('/bookings')
         setBookings(data.bookings)
       } catch (error) {
         console.error('Error fetching bookings:', error)
@@ -29,10 +35,10 @@ export default function MentorBookings() {
 
   const handleBookingAction = async (bookingId, action) => {
     try {
-      await http.patch(`/bookings/${bookingId}/${action}`)
+      await http.put(`/bookings/${bookingId}/${action}`)
       setBookings(prev => prev.map(booking => 
         booking._id === bookingId 
-          ? { ...booking, status: action === 'accept' ? 'confirmed' : 'cancelled' }
+          ? { ...booking, status: action === 'confirm' ? 'confirmed' : 'cancelled' }
           : booking
       ))
     } catch (error) {
@@ -50,6 +56,19 @@ export default function MentorBookings() {
     } finally {
       setChatLoading(prev => ({ ...prev, [bookingId]: false }))
     }
+  }
+
+  const handleAddToGoogleCalendar = (booking) => {
+    const eventData = generateBookingCalendarEvent(booking, booking.status === 'confirmed')
+    const googleCalendarLink = generateGoogleCalendarLink(eventData)
+    window.open(googleCalendarLink, '_blank')
+  }
+
+  const handleDownloadICS = (booking) => {
+    const eventData = generateBookingCalendarEvent(booking, booking.status === 'confirmed')
+    const icsContent = generateICSFile(eventData)
+    const filename = `mentoring-session-${booking.learnerId?.fullName?.replace(/\s+/g, '-').toLowerCase()}-${formatDate(booking.date)}.ics`
+    downloadICSFile(icsContent, filename)
   }
 
   const formatDate = (dateString) => {
@@ -70,11 +89,23 @@ export default function MentorBookings() {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'confirmed': return 'text-success'
-      case 'pending': return 'text-warning'
-      case 'cancelled': return 'text-error'
-      case 'completed': return 'text-info'
-      default: return 'text-muted'
+      case 'confirmed': return 'text-green-700 dark:text-green-400'
+      case 'pending': return 'text-yellow-700 dark:text-yellow-400'
+      case 'cancelled': return 'text-red-700 dark:text-red-400'
+      case 'rejected': return 'text-red-700 dark:text-red-400'
+      case 'completed': return 'text-blue-700 dark:text-blue-400'
+      default: return 'text-gray-700 dark:text-gray-400'
+    }
+  }
+
+  const getStatusBgColor = (status) => {
+    switch (status) {
+      case 'confirmed': return 'bg-green-100 dark:bg-green-900/20'
+      case 'pending': return 'bg-yellow-100 dark:bg-yellow-900/20'
+      case 'cancelled': return 'bg-red-100 dark:bg-red-900/20'
+      case 'rejected': return 'bg-red-100 dark:bg-red-900/20'
+      case 'completed': return 'bg-blue-100 dark:bg-blue-900/20'
+      default: return 'bg-gray-100 dark:bg-gray-900/20'
     }
   }
 
@@ -96,98 +127,170 @@ export default function MentorBookings() {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
+        <div className="grid gap-6">
           {bookings.map((booking) => (
-            <Card key={booking._id}>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">
-                    Session with {booking.learner.name}
-                  </CardTitle>
-                  <span className={`text-sm font-medium ${getStatusColor(booking.status)}`}>
-                    {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                  </span>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="grid md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <p className="font-medium mb-1">Date & Time</p>
-                      <p className="text-muted">
-                        {formatDate(booking.date)} at {formatTime(booking.time)}
-                      </p>
+            <Card key={booking._id} className="overflow-hidden shadow-sm hover:shadow-md transition-shadow border-0 bg-white dark:bg-gray-800">
+              <CardContent className="p-0">
+                <div className="flex flex-col">
+                  {/* Header with student info and status */}
+                  <div className="flex items-center justify-between p-6 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-b border-gray-100 dark:border-gray-700">
+                    <div className="flex items-center gap-4">
+                      <img
+                        src={booking.learnerId?.avatar || '/vite.svg'}
+                        alt={booking.learnerId?.fullName}
+                        className="h-14 w-14 rounded-full object-cover border-2 border-white shadow-sm"
+                      />
+                      <div>
+                        <h3 className="font-semibold text-xl text-gray-900 dark:text-white">
+                          Session with {booking.learnerId?.fullName || booking.learnerId?.name || 'Unknown Student'}
+                        </h3>
+                        <div className="flex items-center gap-4 mt-1">
+                          <span className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1">
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                            </svg>
+                            {formatDate(booking.date)}
+                          </span>
+                          <span className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1">
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                            </svg>
+                            {formatTime(booking.time)}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium mb-1">Duration</p>
-                      <p className="text-muted">{booking.duration} minutes</p>
-                    </div>
-                    <div>
-                      <p className="font-medium mb-1">Student Email</p>
-                      <p className="text-muted">{booking.learner.email}</p>
-                    </div>
-                    <div>
-                      <p className="font-medium mb-1">Subject</p>
-                      <p className="text-muted">{booking.subject || 'General mentoring'}</p>
+                    <div className="flex flex-col items-end gap-2">
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(booking.status)} ${getStatusBgColor(booking.status)}`}>
+                        {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                      </span>
                     </div>
                   </div>
 
-                  {booking.message && (
-                    <div>
-                      <p className="font-medium mb-1 text-sm">Message from student</p>
-                      <p className="text-sm text-muted bg-surface p-3 rounded-md">
-                        {booking.message}
-                      </p>
+                  {/* Session details */}
+                  <div className="p-6 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-100 dark:border-gray-700">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-white mb-1">Duration</p>
+                        <p className="text-gray-600 dark:text-gray-400">60 minutes</p>
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-white mb-1">Student</p>
+                        <p className="text-gray-600 dark:text-gray-400">{booking.learnerId?.fullName || booking.learnerId?.name || 'Unknown Student'}</p>
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-white mb-1">Focus Area</p>
+                        <p className="text-gray-600 dark:text-gray-400">{booking.message || 'General mentoring session'}</p>
+                      </div>
                     </div>
-                  )}
+                  </div>
 
-                  <div className="flex flex-wrap gap-2 pt-2">
-                    {booking.status === 'pending' && (
-                      <>
-                        <Button
-                          onClick={() => handleBookingAction(booking._id, 'accept')}
-                          size="sm"
-                        >
-                          Accept
-                        </Button>
-                        <Button
-                          onClick={() => handleBookingAction(booking._id, 'reject')}
-                          variant="outline"
-                          size="sm"
-                        >
-                          Decline
-                        </Button>
-                      </>
-                    )}
+                  {/* Actions section */}
+                  <div className="p-6">
+                    <div className="flex flex-col gap-4">
+                      {/* Main action buttons */}
+                      {booking.status === 'pending' && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <Button
+                            onClick={() => handleBookingAction(booking._id, 'confirm')}
+                            className="bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2 h-10"
+                          >
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                            Accept Request
+                          </Button>
+                          <Button
+                            onClick={() => handleBookingAction(booking._id, 'reject')}
+                            variant="outline"
+                            className="flex items-center justify-center gap-2 h-10 border-red-200 text-red-600 hover:bg-red-50"
+                          >
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                            </svg>
+                            Decline
+                          </Button>
+                        </div>
+                      )}
 
-                    {booking.status === 'confirmed' && (
-                      <>
-                        <Button
-                          onClick={() => createChatChannel(booking._id)}
-                          disabled={chatLoading[booking._id]}
-                          size="sm"
-                        >
-                          {chatLoading[booking._id] ? 'Creating...' : 'Start Chat'}
-                        </Button>
-                        <Button
-                          onClick={() => navigate(`/call/${booking._id}`)}
-                          variant="outline"
-                          size="sm"
-                        >
-                          Join Video Call
-                        </Button>
-                      </>
-                    )}
+                      {booking.status === 'confirmed' && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          <Button
+                            onClick={() => createChatChannel(booking._id)}
+                            disabled={chatLoading[booking._id]}
+                            className="bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-2 h-10"
+                          >
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                              <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                            </svg>
+                            {chatLoading[booking._id] ? 'Creating...' : 'Start Chat'}
+                          </Button>
+                          <Button
+                            onClick={() => navigate(`/call/${booking._id}`)}
+                            className="bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2 h-10"
+                          >
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
+                            </svg>
+                            Join Video Call
+                          </Button>
+                          <Button
+                            onClick={() => navigate(`/transcript/${booking._id}`)}
+                            variant="outline"
+                            className="flex items-center justify-center gap-2 h-10"
+                          >
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                            </svg>
+                            Notes
+                          </Button>
+                        </div>
+                      )}
 
-                    {booking.status === 'completed' && (
-                      <Button
-                        onClick={() => navigate(`/transcript/${booking._id}`)}
-                        variant="outline"
-                        size="sm"
-                      >
-                        View Transcript
-                      </Button>
-                    )}
+                      {booking.status === 'completed' && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <Button
+                            onClick={() => navigate(`/transcript/${booking._id}`)}
+                            variant="outline"
+                            className="flex items-center justify-center gap-2 h-10"
+                          >
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                            </svg>
+                            View Transcript
+                          </Button>
+                        </div>
+                      )}
+
+                      {/* Calendar actions for confirmed bookings */}
+                      {booking.status === 'confirmed' && (
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                          <Button 
+                            size="sm"
+                            onClick={() => handleAddToGoogleCalendar(booking)}
+                            variant="ghost"
+                            className="flex items-center justify-center gap-1 text-xs border border-gray-200 dark:border-gray-600 h-9"
+                          >
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                            </svg>
+                            Google Calendar
+                          </Button>
+                          <Button 
+                            size="sm"
+                            onClick={() => handleDownloadICS(booking)}
+                            variant="ghost"
+                            className="flex items-center justify-center gap-1 text-xs border border-gray-200 dark:border-gray-600 h-9"
+                          >
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                            </svg>
+                            Download .ics
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </CardContent>

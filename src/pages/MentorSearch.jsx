@@ -154,10 +154,15 @@ export default function MentorSearch() {
             {mentors.map((mentor) => (
               <Card key={mentor._id} className="hover:shadow-xl transition-all duration-300 border-0 shadow-md hover:-translate-y-1">
                 <CardHeader className="pb-4">
-                  <div className="flex items-start justify-between">
+                  <div className="flex items-start gap-4">
+                    <img 
+                      src={mentor.avatar || '/vite.svg'} 
+                      alt={mentor.fullName || mentor.name} 
+                      className="h-12 w-12 rounded-full object-cover border border-gray-200"
+                    />
                     <div className="flex-1">
                       <CardTitle className="text-xl font-semibold text-gray-900 mb-1">
-                        {mentor.name}
+                        {mentor.fullName || mentor.name}
                       </CardTitle>
                       <p className="text-blue-600 font-medium text-sm">
                         {mentor.expertise || 'General Mentoring'}

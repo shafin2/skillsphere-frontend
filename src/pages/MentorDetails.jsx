@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Star, User, Calendar, Clock, MessageSquare } from 'lucide-react';
 import Button from '../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import BookingModal from '../components/BookingModal';
+import { useAuth } from '../context/AuthContext';
 import http from '../lib/http';
 
 const MentorDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [mentor, setMentor] = useState(null);
   const [feedback, setFeedback] = useState([]);
   const [stats, setStats] = useState(null);
@@ -16,6 +19,89 @@ const MentorDetails = () => {
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [feedbackPage, setFeedbackPage] = useState(1);
   const [hasMoreFeedback, setHasMoreFeedback] = useState(true);
+  const [bookingMessage, setBookingMessage] = useState(null);
+
+  const handleBookSession = () => {
+    if (!user) {
+      // Store current path and redirect to login
+      localStorage.setItem('redirectAfterLogin', `/mentors/${id}`)
+      navigate('/auth/login')
+      return
+    }
+    
+    if (!user.roles?.includes('learner')) {
+      setBookingMessage({ 
+        text: 'Only learners can book sessions with mentors.', 
+        type: 'error' 
+      })
+      return
+    }
+    console.log(mentor);
+    if (!mentor.isApproved) {
+      setBookingMessage({ 
+        text: 'This mentor is not available for booking.', 
+        type: 'error' 
+      })
+      return
+    }
+    
+    setShowBookingModal(true)
+  }
+
+  const handleBookingSuccess = (message) => {
+    setShowBookingModal(false)
+    // Store success message in localStorage and redirect to dashboard
+    localStorage.setItem('dashboardMessage', JSON.stringify(message))
+    navigate('/dashboard')
+  }
+
+  const getBookingButtonConfig = () => {
+    if (!user) {
+      return {
+        text: 'Book Session',
+        disabled: false,
+        tooltip: 'Login to book a session'
+      }
+    }
+
+    if (!user.roles?.includes('learner')) {
+      return {
+        text: 'Book Session',
+        disabled: true,
+        tooltip: 'Only learners can book sessions'
+      }
+    }
+    if (!mentor?.isApproved) {
+      return {
+        text: 'Not Available',
+        disabled: true,
+        tooltip: 'This mentor is not available for booking'
+      }
+    }
+
+    return {
+      text: 'Book Session',
+      disabled: false,
+      tooltip: 'Book a mentoring session'
+    }
+  }
+
+  const handleShareProfile = async () => {
+    const profileUrl = window.location.href
+    try {
+      await navigator.clipboard.writeText(profileUrl)
+      alert('Profile link copied to clipboard!')
+    } catch (err) {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea')
+      textArea.value = profileUrl
+      document.body.appendChild(textArea)
+      textArea.select()
+      document.execCommand('copy')
+      document.body.removeChild(textArea)
+      alert('Profile link copied to clipboard!')
+    }
+  }
 
   useEffect(() => {
     fetchMentorDetails();
@@ -148,6 +234,17 @@ const MentorDetails = () => {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
+      {/* Booking Message */}
+      {bookingMessage && (
+        <div className={`mb-6 p-4 rounded-lg ${
+          bookingMessage.type === 'success' 
+            ? 'bg-green-50 text-green-800 border border-green-200' 
+            : 'bg-red-50 text-red-800 border border-red-200'
+        }`}>
+          {bookingMessage.text}
+        </div>
+      )}
+
       {/* Mentor Profile Header */}
       <Card className="mb-6">
         <CardContent className="p-6">
@@ -159,21 +256,35 @@ const MentorDetails = () => {
             />
               
               <div className="flex-1">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">{mentor.fullName}</h1>
-                
-                {stats && (
-                  <div className="flex items-center space-x-4 mb-4">
-                    <div className="flex items-center space-x-1">
-                      {renderStars(stats.averageRating)}
-                      <span className="font-medium text-gray-900">
-                        {stats.averageRating?.toFixed(1) || '0.0'}
-                      </span>
-                      <span className="text-gray-600">
-                        ({stats.totalReviews} review{stats.totalReviews !== 1 ? 's' : ''})
-                      </span>
-                    </div>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2">{mentor.fullName}</h1>
+                    
+                    {stats && (
+                      <div className="flex items-center space-x-4 mb-4">
+                        <div className="flex items-center space-x-1">
+                          {renderStars(stats.averageRating)}
+                          <span className="font-medium text-gray-900">
+                            {stats.averageRating?.toFixed(1) || '0.0'}
+                          </span>
+                          <span className="text-gray-600">
+                            ({stats.totalReviews} review{stats.totalReviews !== 1 ? 's' : ''})
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
+                  <button
+                    onClick={handleShareProfile}
+                    className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors border border-gray-200"
+                    title="Share profile"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                    </svg>
+                    Share
+                  </button>
+                </div>
                 
                 {mentor.bio && (
                   <p className="text-gray-600 mb-4">{mentor.bio}</p>
@@ -204,12 +315,26 @@ const MentorDetails = () => {
               </div>
               
               <div className="text-right">
-                <Button 
-                  onClick={() => setShowBookingModal(true)}
-                  className="mb-2"
-                >
-                  📅 Book Session
-                </Button>
+                {(() => {
+                  const buttonConfig = getBookingButtonConfig()
+                  return (
+                    <div className="relative group">
+                      <Button 
+                        onClick={handleBookSession}
+                        disabled={buttonConfig.disabled}
+                        className={`mb-2 ${buttonConfig.disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        title={buttonConfig.tooltip}
+                      >
+                        📅 {buttonConfig.text}
+                      </Button>
+                      {buttonConfig.disabled && (
+                        <div className="absolute bottom-full right-0 mb-2 px-3 py-1 bg-gray-800 text-white text-sm rounded opacity-0 group-hover:opacity-100 transition-opacity z-10 whitespace-nowrap">
+                          {buttonConfig.tooltip}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })()}
               </div>
             </div>
           </CardContent>
@@ -293,12 +418,13 @@ const MentorDetails = () => {
         </Card>
 
       {/* Booking Modal */}
-      <BookingModal
-        isOpen={showBookingModal}
-        onClose={() => setShowBookingModal(false)}
-        mentorId={id}
-        mentorName={mentor.fullName}
-      />
+      {showBookingModal && (
+        <BookingModal
+          mentor={mentor}
+          onClose={() => setShowBookingModal(false)}
+          onSuccess={handleBookingSuccess}
+        />
+      )}
     </div>
   );
 };

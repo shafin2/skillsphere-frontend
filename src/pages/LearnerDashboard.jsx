@@ -27,11 +27,27 @@ const LearnerDashboard = () => {
     totalLearningHours: 0
   });
   const [recentBookings, setRecentBookings] = useState([]);
+  const [upcomingBookings, setUpcomingBookings] = useState([]);
+  const [pendingBookings, setPendingBookings] = useState([]);
   const [recommendedMentors, setRecommendedMentors] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [successMessage, setSuccessMessage] = useState(null);
 
   useEffect(() => {
     fetchDashboardData();
+    
+    // Check for success message from booking
+    const message = localStorage.getItem('dashboardMessage');
+    if (message) {
+      try {
+        setSuccessMessage(JSON.parse(message));
+        localStorage.removeItem('dashboardMessage');
+        // Clear message after 5 seconds
+        setTimeout(() => setSuccessMessage(null), 5000);
+      } catch (e) {
+        console.error('Error parsing dashboard message:', e);
+      }
+    }
   }, []);
 
   const fetchDashboardData = async () => {
@@ -40,21 +56,25 @@ const LearnerDashboard = () => {
       const { data: bookingsData } = await http.get('/bookings');
       const bookings = bookingsData.bookings || [];
       
-      // Calculate stats
-      const completed = bookings.filter(b => b.status === 'completed').length;
+      // Separate bookings by status and type
+      const completed = bookings.filter(b => b.status === 'completed');
       const upcoming = bookings.filter(b => 
         b.status === 'confirmed' && new Date(b.date) > new Date()
-      ).length;
+      );
+      const pending = bookings.filter(b => b.status === 'pending');
+      const recentCompleted = completed.slice(0, 3); // Last 3 completed
 
       setStats({
         totalBookings: bookings.length,
-        completedSessions: completed,
-        upcomingBookings: upcoming,
-        totalLearningHours: completed * 1 // Assuming 1 hour per session
+        completedSessions: completed.length,
+        upcomingBookings: upcoming.length,
+        totalLearningHours: completed.length * 1 // Assuming 1 hour per session
       });
 
-      // Get recent bookings (last 5)
-      setRecentBookings(bookings.slice(0, 5));
+      // Set different booking categories
+      setRecentBookings(recentCompleted);
+      setUpcomingBookings(upcoming.slice(0, 3));
+      setPendingBookings(pending.slice(0, 3));
 
       // TODO: Fetch recommended mentors based on user interests
       // For now, we'll use a placeholder
@@ -102,6 +122,25 @@ const LearnerDashboard = () => {
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-8">
+      {/* Success Message */}
+      {successMessage && (
+        <div className={`rounded-lg p-4 mb-6 ${
+          successMessage.type === 'success' 
+            ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200 border border-green-200 dark:border-green-800'
+            : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-200 border border-red-200 dark:border-red-800'
+        }`}>
+          <div className="flex items-center justify-between">
+            <p className="font-medium">{successMessage.message}</p>
+            <button 
+              onClick={() => setSuccessMessage(null)}
+              className="text-current opacity-60 hover:opacity-100"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Welcome Section */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
@@ -217,11 +256,114 @@ const LearnerDashboard = () => {
         </Card>
       </div>
 
-      {/* Recent Bookings */}
+      {/* Booking Sections */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Pending Requests */}
+        <Card>
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-semibold text-yellow-600 dark:text-yellow-400">
+                Pending Requests
+              </CardTitle>
+              <Link to="/bookings">
+                <Button variant="ghost" size="sm">
+                  View All
+                  <ChevronRight className="w-4 h-4 ml-1" />
+                </Button>
+              </Link>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {pendingBookings.length === 0 ? (
+              <div className="text-center py-6">
+                <Clock className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                <p className="text-sm text-gray-500 dark:text-gray-400">No pending requests</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {pendingBookings.map((booking, index) => (
+                  <div key={booking._id || index} className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <img
+                        src={booking.mentorId?.avatar || '/vite.svg'}
+                        alt={booking.mentorId?.fullName}
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                      <div>
+                        <p className="font-medium text-sm text-gray-900 dark:text-white">
+                          {booking.mentorId?.fullName}
+                        </p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                          {formatDate(booking.date)} at {booking.time}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="px-2 py-1 rounded-full text-xs font-medium text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900/20">
+                      Pending
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Upcoming Sessions */}
+        <Card>
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-semibold text-green-600 dark:text-green-400">
+                Upcoming Sessions
+              </CardTitle>
+              <Link to="/bookings">
+                <Button variant="ghost" size="sm">
+                  View All
+                  <ChevronRight className="w-4 h-4 ml-1" />
+                </Button>
+              </Link>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {upcomingBookings.length === 0 ? (
+              <div className="text-center py-6">
+                <Calendar className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                <p className="text-sm text-gray-500 dark:text-gray-400">No upcoming sessions</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {upcomingBookings.map((booking, index) => (
+                  <div key={booking._id || index} className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <img
+                        src={booking.mentorId?.avatar || '/vite.svg'}
+                        alt={booking.mentorId?.fullName}
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                      <div>
+                        <p className="font-medium text-sm text-gray-900 dark:text-white">
+                          {booking.mentorId?.fullName}
+                        </p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                          {formatDate(booking.date)} at {booking.time}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="px-2 py-1 rounded-full text-xs font-medium text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/20">
+                      Confirmed
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Recent Completed Sessions */}
       <Card>
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-xl font-semibold">Recent Bookings</CardTitle>
+            <CardTitle className="text-xl font-semibold">Recent Completed Sessions</CardTitle>
             <Link to="/bookings">
               <Button variant="ghost" size="sm">
                 View All
@@ -233,8 +375,8 @@ const LearnerDashboard = () => {
         <CardContent>
           {recentBookings.length === 0 ? (
             <div className="text-center py-8">
-              <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500 dark:text-gray-400">No bookings yet</p>
+              <Award className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500 dark:text-gray-400">No completed sessions yet</p>
               <p className="text-sm text-gray-400 dark:text-gray-500 mb-4">Start your learning journey by booking a session</p>
               <Link to="/mentors">
                 <Button>Find Mentors</Button>
@@ -259,9 +401,14 @@ const LearnerDashboard = () => {
                       </p>
                     </div>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
-                    {booking.status}
-                  </span>
+                  <div className="flex items-center space-x-3">
+                    <span className="px-3 py-1 rounded-full text-xs font-medium text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/20">
+                      Completed
+                    </span>
+                    <Button variant="outline" size="sm">
+                      Leave Review
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
