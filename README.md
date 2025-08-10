@@ -2,6 +2,11 @@
 
 A modern React frontend for the SkillSphere mentorship platform built with Vite, Tailwind CSS, and React Router.
 
+## 🎬 Demo & Documentation
+
+- **📽️ Demo Video**: [Watch the full platform demo](./Demo.mp4)
+- **📋 Project Overview**: [View detailed project documentation](./SkillSphere_Project_Overview.docx)
+
 ## Features
 
 - ✅ **Authentication System**: Complete auth flow with email/password and Google OAuth
