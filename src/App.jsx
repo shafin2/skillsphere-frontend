@@ -31,6 +31,16 @@ import Transcript from './pages/Transcript.jsx'
 import AILearningAssistant from './pages/AILearningAssistant.jsx'
 import AIMentors from './pages/AIMentors.jsx'
 
+import { 
+  AdminLogin, 
+  AdminDashboard, 
+  AdminMentors, 
+  AdminUsers,
+  AdminSessions,
+  AdminFeedback,
+  AdminAnalytics,
+  AdminProtectedRoute 
+} from './admin/index.js'
 function AppContent() {
   const { user, showProfileModal, updateUserProfile } = useAuth()
 
@@ -170,6 +180,39 @@ function AppContent() {
                   <Transcript />
                 </Layout>
               </ProtectedRoute>
+            } />
+            
+            {/* Admin routes */}
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin" element={
+              <AdminProtectedRoute>
+                <AdminDashboard />
+              </AdminProtectedRoute>
+            } />
+            <Route path="/admin/mentors" element={
+              <AdminProtectedRoute>
+                <AdminMentors />
+              </AdminProtectedRoute>
+            } />
+            <Route path="/admin/users" element={
+              <AdminProtectedRoute>
+                <AdminUsers />
+              </AdminProtectedRoute>
+            } />
+            <Route path="/admin/sessions" element={
+              <AdminProtectedRoute>
+                <AdminSessions />
+              </AdminProtectedRoute>
+            } />
+            <Route path="/admin/feedback" element={
+              <AdminProtectedRoute>
+                <AdminFeedback />
+              </AdminProtectedRoute>
+            } />
+            <Route path="/admin/analytics" element={
+              <AdminProtectedRoute>
+                <AdminAnalytics />
+              </AdminProtectedRoute>
             } />
             
             {/* Catch all - redirect to dashboard if authenticated, otherwise landing */}
