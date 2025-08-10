@@ -4,8 +4,8 @@ A modern React frontend for the SkillSphere mentorship platform built with Vite,
 
 ## 🎬 Demo & Documentation
 
-- **📽️ Demo Video**: [Watch the full platform demo](./Demo.mp4)
-- **📋 Project Overview**: [View detailed project documentation](./SkillSphere_Project_Overview.docx)
+- **📽️ Demo Video**: https://drive.google.com/file/d/1mrdzr9AZ5E7I8HA-htDbmMoEWoYcw31A/view?usp=sharing
+- **📋 Project Overview**: https://drive.google.com/file/d/16Witm9olrkMVHqs1Ns4QVyLJSklqjdKp/view?pli=1
 
 ## Features
 
