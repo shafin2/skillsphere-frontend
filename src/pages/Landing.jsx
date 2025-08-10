@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useTheme } from '../context/ThemeProvider.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
+import Logo from '../components/ui/Logo.jsx'
 
 export default function Landing() {
   const { isDark, toggleTheme } = useTheme()
@@ -15,10 +16,9 @@ export default function Landing() {
       {/* Navbar */}
       <header className="border-b border-border bg-surface/70 backdrop-blur-md sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-md bg-primary" />
-            <span className="font-semibold text-lg">SkillSphere</span>
-          </div>
+          <Link to="/">
+            <Logo size="sm" showText={true} />
+          </Link>
           <div className="flex items-center gap-3">
             <a href="#features" className="text-sm text-muted hover:text-foreground">Features</a>
             <a href="#how-it-works" className="text-sm text-muted hover:text-foreground">How it works</a>

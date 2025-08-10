@@ -18,6 +18,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeProvider';
 import Button from './ui/Button';
+import Logo from './ui/Logo';
 
 const Layout = ({ children }) => {
   const { user, logout } = useAuth();
@@ -75,13 +76,8 @@ const Layout = ({ children }) => {
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <div className="flex items-center">
-              <Link to="/dashboard" className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">S</span>
-                </div>
-                <span className="text-xl font-bold text-gray-900 dark:text-white">
-                  SkillSphere
-                </span>
+              <Link to="/dashboard" className="flex items-center">
+                <Logo size="sm" showText={true} />
               </Link>
             </div>
 
