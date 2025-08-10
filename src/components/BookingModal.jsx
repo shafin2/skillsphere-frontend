@@ -13,6 +13,11 @@ export default function BookingModal({ mentor, onClose, onSuccess }) {
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
 
+  // Safety check for mentor
+  if (!mentor) {
+    return null
+  }
+
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
@@ -92,7 +97,7 @@ export default function BookingModal({ mentor, onClose, onSuccess }) {
         <Card>
           <CardHeader>
             <CardTitle className="text-center">
-              Book Session with {mentor.fullName}
+              Book Session with {mentor?.fullName || mentor?.name || 'Mentor'}
             </CardTitle>
             <p className="text-center text-muted text-sm">
               Schedule your mentoring session

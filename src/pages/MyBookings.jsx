@@ -4,12 +4,10 @@ import http from '../lib/http.js'
 import Button from '../components/ui/Button.jsx'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
-import { useTheme } from '../context/ThemeProvider.jsx'
 import FeedbackModal from '../components/FeedbackModal.jsx'
 
 export default function MyBookings() {
-  const { user, logout } = useAuth()
-  const { isDark, toggleTheme } = useTheme()
+  const { user } = useAuth()
   const navigate = useNavigate()
   const [bookings, setBookings] = useState([])
   const [loading, setLoading] = useState(true)
@@ -118,6 +116,47 @@ export default function MyBookings() {
     }
   }
 
+  const getStatusBadgeColor = (status) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-100 text-yellow-800'
+      case 'confirmed': return 'bg-green-100 text-green-800'
+      case 'completed': return 'bg-blue-100 text-blue-800'
+      case 'cancelled': return 'bg-red-100 text-red-800'
+      default: return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'pending':
+        return (
+          <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        )
+      case 'confirmed':
+        return (
+          <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        )
+      case 'completed':
+        return (
+          <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+          </svg>
+        )
+      case 'cancelled':
+        return (
+          <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        )
+      default:
+        return null
+    }
+  }
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       weekday: 'short',
@@ -135,39 +174,41 @@ export default function MyBookings() {
     return `${hour12}:${minutes} ${ampm}`
   }
 
+  const handleFeedbackClick = (bookingId, mentorName) => {
+    setFeedbackModal({
+      isOpen: true,
+      bookingId,
+      mentorName
+    })
+  }
+
+  const createChatChannel = async (bookingId) => {
+    try {
+      setChatLoading(prev => ({ ...prev, [bookingId]: true }))
+      const { data } = await http.post(`/chat/channel/${bookingId}`)
+      navigate(`/chat/${data.channelId}`)
+    } catch (error) {
+      console.error('Error creating chat channel:', error)
+      alert(error.response?.data?.error || 'Failed to open chat')
+    } finally {
+      setChatLoading(prev => ({ ...prev, [bookingId]: false }))
+    }
+  }
+
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-surface/70 backdrop-blur-md">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <a href="/" className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-md bg-primary" />
-              <span className="font-semibold text-lg">SkillSphere</span>
-            </a>
-          </div>
-          <div className="flex items-center gap-3">
-            <a href="/mentors" className="text-sm">Mentors</a>
-            <a href="/bookings" className="text-sm font-medium">My Bookings</a>
-            <a href="/profile" className="text-sm">Profile</a>
-            <button onClick={toggleTheme} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-border hover:bg-background transition-colors text-sm">
-              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: isDark ? 'rgb(var(--color-accent))' : 'rgb(var(--color-primary))' }} />
-              {isDark ? 'Light' : 'Dark'}
-            </button>
-            <Button variant="ghost" onClick={logout}>Logout</Button>
-          </div>
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <div className="mb-8">
+        <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">My Bookings</h1>
+        <p className="text-gray-600">Manage your mentoring sessions and appointments</p>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
         </div>
-      </header>
-
-      <main className="max-w-4xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6">My Bookings</h1>
-
-        {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          </div>
-        ) : bookings.length === 0 ? (
-          <Card>
-            <CardContent className="p-8 text-center">
+      ) : bookings.length === 0 ? (
+        <Card>
+          <CardContent className="p-8 text-center">
               <p className="text-muted mb-4">You haven't booked any sessions yet.</p>
               <a href="/mentors">
                 <Button>Browse Mentors</Button>
@@ -282,7 +323,6 @@ export default function MyBookings() {
             ))}
           </div>
         )}
-      </main>
 
       {/* Feedback Modal */}
       <FeedbackModal

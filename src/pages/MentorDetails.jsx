@@ -129,7 +129,7 @@ const MentorDetails = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex items-center justify-center py-20">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
       </div>
     );
@@ -137,7 +137,7 @@ const MentorDetails = () => {
 
   if (!mentor) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex items-center justify-center py-20">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Mentor Not Found</h2>
           <p className="text-gray-600">The mentor you're looking for doesn't exist.</p>
@@ -147,17 +147,16 @@ const MentorDetails = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Mentor Profile Header */}
-        <Card className="mb-6">
-          <CardContent className="p-6">
-            <div className="flex items-start space-x-6">
-              <img
-                src={mentor.avatar || '/vite.svg'}
-                alt={mentor.fullName}
-                className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
-              />
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      {/* Mentor Profile Header */}
+      <Card className="mb-6">
+        <CardContent className="p-6">
+          <div className="flex items-start space-x-6">
+            <img
+              src={mentor.avatar || '/vite.svg'}
+              alt={mentor.fullName}
+              className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+            />
               
               <div className="flex-1">
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">{mentor.fullName}</h1>
@@ -292,7 +291,6 @@ const MentorDetails = () => {
             )}
           </CardContent>
         </Card>
-      </div>
 
       {/* Booking Modal */}
       <BookingModal

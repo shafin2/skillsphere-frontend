@@ -3,6 +3,7 @@ import { ThemeProvider } from './context/ThemeProvider.jsx'
 import { AuthProvider, useAuth } from './context/AuthContext.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import ProfileCompletionModal from './components/ProfileCompletionModal.jsx'
+import Layout from './components/Layout.jsx'
 
 // Auth pages
 import RoleSelection from './pages/auth/RoleSelection.jsx'
@@ -43,8 +44,10 @@ function AppContent() {
       )}
       
       <Routes>
-            {/* Landing page */}
-            <Route path="/" element={<Landing />} />
+            {/* Landing page - redirect to dashboard if authenticated */}
+            <Route path="/" element={
+              user ? <Navigate to="/dashboard" replace /> : <Landing />
+            } />
             
             {/* Auth routes - only accessible when not logged in */}
             <Route path="/auth/role-selection" element={
@@ -86,30 +89,46 @@ function AppContent() {
               </ProtectedRoute>
             } />
 
-            <Route path="/mentors" element={<MentorSearch />} />
-            <Route path="/mentors/:id" element={<MentorDetails />} />
+            <Route path="/mentors" element={
+              <Layout>
+                <MentorSearch />
+              </Layout>
+            } />
+            <Route path="/mentors/:id" element={
+              <Layout>
+                <MentorDetails />
+              </Layout>
+            } />
 
             <Route path="/profile" element={
               <ProtectedRoute requireAuth={true}>
-                <Profile />
+                <Layout>
+                  <Profile />
+                </Layout>
               </ProtectedRoute>
             } />
 
             <Route path="/bookings" element={
               <ProtectedRoute requireAuth={true}>
-                <MyBookings />
+                <Layout>
+                  <MyBookings />
+                </Layout>
               </ProtectedRoute>
             } />
 
             <Route path="/mentor-bookings" element={
               <ProtectedRoute requireAuth={true}>
-                <MentorBookings />
+                <Layout>
+                  <MentorBookings />
+                </Layout>
               </ProtectedRoute>
             } />
 
             <Route path="/chat/:channelId" element={
               <ProtectedRoute requireAuth={true}>
-                <ChatPage />
+                <Layout>
+                  <ChatPage />
+                </Layout>
               </ProtectedRoute>
             } />
 
@@ -121,12 +140,16 @@ function AppContent() {
 
             <Route path="/transcript/:bookingId" element={
               <ProtectedRoute requireAuth={true}>
-                <TranscriptPage />
+                <Layout>
+                  <TranscriptPage />
+                </Layout>
               </ProtectedRoute>
             } />
             
-            {/* Catch all - redirect to landing */}
-            <Route path="*" element={<Navigate to="/" replace />} />
+            {/* Catch all - redirect to dashboard if authenticated, otherwise landing */}
+            <Route path="*" element={
+              user ? <Navigate to="/dashboard" replace /> : <Navigate to="/" replace />
+            } />
           </Routes>
         </Router>
     )

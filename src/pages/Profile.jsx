@@ -23,17 +23,15 @@ export default function Profile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex items-center justify-center py-20">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen p-4 bg-background">
-      <div className="max-w-3xl mx-auto">
-        <ProfileForm user={profile} onSubmitSuccess={(u) => { setProfile(u); updateUserProfile(u) }} />
-      </div>
+    <div className="max-w-3xl mx-auto px-4 py-8">
+      <ProfileForm user={profile} onSubmitSuccess={(u) => { setProfile(u); updateUserProfile(u) }} />
     </div>
   )
 } 

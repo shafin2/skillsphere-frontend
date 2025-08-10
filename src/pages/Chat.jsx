@@ -179,7 +179,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50 px-4 overflow-hidden">
+    <div className="h-[calc(100vh-120px)] flex flex-col bg-gray-50 px-4 overflow-hidden">
       {/* Custom Chat Container */}
       <div className="flex-1 flex flex-col overflow-hidden min-h-0">
         <Chat client={client} theme="messaging light">
